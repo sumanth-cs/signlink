@@ -45,10 +45,10 @@ export const useWebSocket = () => {
   }, [connect]);
 
   const sendFrame = useCallback((frameBase64) => {
-    if (wsRef.current && isConnected) {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(frameBase64);
     }
-  }, [isConnected]);
+  }, []);
 
   return {
     isConnected,

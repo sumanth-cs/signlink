@@ -4,7 +4,8 @@ websockets>=11.0.3
 numpy<2.0.0
 opencv-python>=4.8.0.76
 mediapipe>=0.10.5
-tensorflow>=2.14.0
 python-multipart>=0.0.6
 pydantic>=2.3.0
 python-dotenv>=1.0.0
+torch
+torchvision
