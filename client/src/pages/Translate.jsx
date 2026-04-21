@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import WebcamComponent from '../components/Camera/WebcamComponent';
 import { useWebSocket } from '../hooks/useWebSocket';
-import { Trash2, Copy, Volume2, Zap, Circle, Play, Square } from 'lucide-react';
+import { Trash2, Copy, Volume2, Zap, Circle, Play, Square, Delete } from 'lucide-react';
 
 const EMOTION_CONFIG = {
   happy:     { emoji: '😄', color: 'text-green-400',  bar: 'bg-green-500' },
@@ -13,24 +13,33 @@ const EMOTION_CONFIG = {
 const Translate = () => {
   const transcriptRef = useRef(null);
   const { isConnected, prediction, sendFrame } = useWebSocket();
-  const [history, setHistory]       = useState([]);
-  const [copied, setCopied]         = useState(false);
-  const [isTranslating, setTranslating] = useState(false); // ← start/stop
+  const [history, setHistory]           = useState([]);
+  const [copied, setCopied]             = useState(false);
+  const [isTranslating, setTranslating] = useState(false);
+  const [sentence, setSentence]         = useState('');  // ← LOCAL sentence state
 
   // Only forward frames when actively translating
   const handleFrame = (frame) => {
     if (isTranslating) sendFrame(frame);
   };
 
-  // Maintain transcript history
+  // Append confirmed signs to local sentence
   useEffect(() => {
-    if (!prediction?.text || !prediction.word_added || !isTranslating) return;
+    if (!prediction?.word_added || !isTranslating) return;
+    const label = prediction.text;
+    if (!label || label === '—') return;
+
+    setSentence(prev => {
+      if (prediction.is_word) return prev + label + '  ';
+      return prev + label.toUpperCase();
+    });
+
+    // Add to transcript history
     setHistory(prev => {
       const entry = {
         id:         Date.now(),
-        label:      prediction.text,
+        label,
         isWord:     prediction.is_word,
-        sentence:   prediction.sentence,
         confidence: prediction.confidence,
         time:       new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
       };
@@ -38,13 +47,18 @@ const Translate = () => {
     });
   }, [prediction, isTranslating]);
 
+  // ⌫ Backspace — removes last character from local sentence instantly
+  const handleBackspace = () => setSentence(prev => prev.slice(0, -1));
+
+  // 🗑 Clear all
+  const handleClearSentence = () => setSentence('');
+
   // Auto-scroll
   useEffect(() => {
     if (transcriptRef.current)
       transcriptRef.current.scrollTop = transcriptRef.current.scrollHeight;
   }, [history]);
 
-  const sentence      = prediction?.sentence    || '';
   const confidence    = prediction?.confidence  || 0;
   const currentLabel  = prediction?.text        || '—';
   const isWord        = prediction?.is_word     || false;
@@ -186,13 +200,33 @@ const Translate = () => {
                 <span className="text-sm font-semibold text-white">Live Sentence</span>
               </div>
               <div className="flex gap-1.5">
-                <button onClick={handleCopy} title="Copy"
+                {/* ⌫ Backspace */}
+                <button
+                  onClick={handleBackspace}
+                  title="Delete last character"
+                  className="flex items-center gap-1 px-2 py-1.5 rounded-lg hover:bg-red-900/40 text-gray-400 hover:text-red-300 transition-colors text-xs font-medium"
+                >
+                  <Delete className="w-3.5 h-3.5" />⌫
+                </button>
+                {/* Copy */}
+                <button onClick={() => {
+                    if (sentence) { navigator.clipboard.writeText(sentence); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+                  }} title="Copy"
                   className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
                   <Copy className="w-3.5 h-3.5" />
                 </button>
-                <button onClick={handleSpeak} title="Read aloud"
+                {/* Speak */}
+                <button onClick={() => {
+                    if (sentence && 'speechSynthesis' in window)
+                      window.speechSynthesis.speak(new SpeechSynthesisUtterance(sentence));
+                  }} title="Read aloud"
                   className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
                   <Volume2 className="w-3.5 h-3.5" />
+                </button>
+                {/* Clear all */}
+                <button onClick={handleClearSentence} title="Clear sentence"
+                  className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-red-400 transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>
@@ -204,6 +238,7 @@ const Translate = () => {
             </div>
             {copied && <p className="text-xs text-green-400 mt-1 text-right">Copied!</p>}
           </div>
+
 
           {/* Current Detection */}
           <div className={`border rounded-xl p-4 transition-colors ${
