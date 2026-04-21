@@ -2,20 +2,27 @@ import { useState, useCallback, useRef } from 'react';
 
 export const useCamera = () => {
   const [error, setError] = useState(null);
-  const [hasPermission, setHasPermission] = useState(null);
+  const [hasPermission, setHasPermission] = useState(false);
   const webcamRef = useRef(null);
 
-  const requestPermission = useCallback(async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      setHasPermission(true);
-      setError(null);
-      // clean up stream right after permission check
-      stream.getTracks().forEach(track => track.stop());
-    } catch (err) {
-      setHasPermission(false);
-      setError(err.name === 'NotAllowedError' ? 'Permission Denied' : 'Camera Not Found');
+  // Just checks if camera API exists; actual permission is granted
+  // when react-webcam mounts and calls getUserMedia internally.
+  const requestPermission = useCallback(() => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Camera not supported in this browser');
     }
+    // Let react-webcam handle the actual camera stream.
+    // We surface errors via onUserMediaError below.
+  }, []);
+
+  const onUserMedia = useCallback(() => {
+    setHasPermission(true);
+    setError(null);
+  }, []);
+
+  const onUserMediaError = useCallback((err) => {
+    setHasPermission(false);
+    setError(err.name === 'NotAllowedError' ? 'Camera permission denied. Please allow camera access.' : 'Camera not found or in use by another app.');
   }, []);
 
   const captureFrame = useCallback(() => {
@@ -23,12 +30,14 @@ export const useCamera = () => {
       return webcamRef.current.getScreenshot();
     }
     return null;
-  }, [webcamRef]);
+  }, []);
 
   return {
     error,
     hasPermission,
     requestPermission,
+    onUserMedia,
+    onUserMediaError,
     webcamRef,
     captureFrame
   };
