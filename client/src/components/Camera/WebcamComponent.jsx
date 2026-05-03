@@ -48,9 +48,14 @@ const WebcamComponent = ({ onFrameCapture }) => {
     const w = canvas.width;
     const h = canvas.height;
 
-    // Draw connections
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.85)'; // indigo-500
+    // High-tech professional mesh styling
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(14, 165, 233, 0.6)'; // sky-500 glow
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)'; // sky-400
     ctx.lineWidth = 2.5;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    
     for (const [a, b] of HAND_CONNECTIONS) {
       ctx.beginPath();
       ctx.moveTo(landmarks[a].x * w, landmarks[a].y * h);
@@ -58,19 +63,47 @@ const WebcamComponent = ({ onFrameCapture }) => {
       ctx.stroke();
     }
 
-    // Draw landmark dots
+    // Advanced precision dots
+    ctx.shadowBlur = 8;
     for (let i = 0; i < landmarks.length; i++) {
       const x = landmarks[i].x * w;
       const y = landmarks[i].y * h;
-      const isTip = [4,8,12,16,20].includes(i); // fingertip = bigger dot
+      const isTip = [4,8,12,16,20].includes(i);
+      const isBase = i === 0;
 
       ctx.beginPath();
-      ctx.arc(x, y, isTip ? 6 : 3.5, 0, 2 * Math.PI);
-      ctx.fillStyle   = isTip ? '#a5b4fc' : 'rgba(165,180,252,0.7)'; // indigo-300
-      ctx.fill();
-      ctx.strokeStyle = '#4f46e5'; // indigo-600
-      ctx.lineWidth   = 1.5;
-      ctx.stroke();
+      if (isTip) {
+        // Futuristic reticle for fingertips
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#0ea5e9'; // sky-500
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // Outer targeting ring
+        ctx.beginPath();
+        ctx.arc(x, y, 11, 0, 2 * Math.PI);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      } else if (isBase) {
+        // Base of the hand
+        ctx.arc(x, y, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = '#38bdf8';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        // Normal joint
+        ctx.arc(x, y, 3.5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     }
   }, []);
 
@@ -83,7 +116,7 @@ const WebcamComponent = ({ onFrameCapture }) => {
     });
     hands.setOptions({
       maxNumHands:            1,
-      modelComplexity:        0,   // 0 = lite (fast), 1 = full (accurate)
+      modelComplexity:        0,
       minDetectionConfidence: 0.7,
       minTrackingConfidence:  0.5,
     });
@@ -108,7 +141,6 @@ const WebcamComponent = ({ onFrameCapture }) => {
   useEffect(() => {
     if (!isLive) return;
 
-    // MediaPipe scripts may take a moment to load from CDN
     const tryInit = () => {
       if (window.Hands) {
         initMediaPipe();
@@ -124,7 +156,6 @@ const WebcamComponent = ({ onFrameCapture }) => {
     };
   }, [isLive, initMediaPipe]);
 
-  // ── Camera permission request ─────────────────────────────────────────
   const requestAccess = useCallback(async () => {
     setErrorMsg('');
     setErrorType('');
@@ -146,58 +177,46 @@ const WebcamComponent = ({ onFrameCapture }) => {
     }
   }, []);
 
-  // ── IDLE ──────────────────────────────────────────────────────────────
   if (status === 'idle') {
     return (
-      <div className="w-full aspect-video bg-gray-900 rounded-xl border border-gray-700 flex flex-col items-center justify-center gap-4 p-6">
-        <div className="text-5xl">📷</div>
+      <div className="w-full aspect-video glass-card border-white/5 flex flex-col items-center justify-center gap-6 p-8">
+        <div className="w-20 h-20 bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-400 animate-float">
+          <div className="text-4xl">📸</div>
+        </div>
         <div className="text-center">
-          <p className="text-white font-semibold text-lg mb-1">Enable Camera</p>
-          <p className="text-gray-400 text-sm">Click below — your camera is used locally only.</p>
+          <h3 className="text-white font-black text-xl mb-2 italic">Camera Activation Required</h3>
+          <p className="text-slate-500 text-sm max-w-xs mx-auto">
+            Enable your camera to start the real-time AI recognition engine.
+          </p>
         </div>
         <button onClick={requestAccess}
-          className="px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-lg">
-          Enable Camera →
+          className="px-10 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-bold transition-all shadow-xl shadow-indigo-600/20 active:scale-95">
+          Enable Access →
         </button>
       </div>
     );
   }
 
-  // ── ERROR ─────────────────────────────────────────────────────────────
   if (status === 'error') {
     return (
-      <div className="w-full aspect-video bg-gray-900 rounded-xl border border-red-800/50 flex flex-col items-center justify-center gap-3 p-5 text-center overflow-y-auto">
-        <p className="text-red-400 font-semibold">Camera Error — {errorType}</p>
-
-        {errorMsg === 'not-found' && (
-          <div className="bg-amber-900/30 border border-amber-700/40 rounded-xl p-4 text-xs text-amber-200 text-left w-full space-y-1.5">
-            <p className="font-bold text-amber-300">🍎 macOS fix (30 sec):</p>
-            <p>1. ⌘ Space → <strong>System Settings</strong></p>
-            <p>2. <strong>Privacy & Security → Camera</strong></p>
-            <p>3. Toggle <strong>Google Chrome ON</strong> 🟢</p>
-            <p>4. ⌘ Q to <strong>quit Chrome completely</strong></p>
-            <p>5. Reopen Chrome → Retry</p>
-          </div>
-        )}
-        {errorMsg === 'browser-denied' && (
-          <p className="text-gray-300 text-sm">Click the 🔒 lock icon in the address bar → set Camera to Allow → refresh.</p>
-        )}
-        {errorMsg === 'in-use' && (
-          <p className="text-gray-300 text-sm">Camera is being used by another app. Close FaceTime / Zoom and retry.</p>
-        )}
-
+      <div className="w-full aspect-video glass-card border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center gap-6 p-8 text-center overflow-y-auto">
+        <p className="text-red-400 font-black text-lg uppercase tracking-wider">Camera Access Blocked</p>
+        <div className="bg-black/40 border border-red-500/10 rounded-2xl p-6 text-xs text-slate-400 text-left w-full max-w-sm space-y-3">
+          <p className="font-bold text-red-300 uppercase tracking-widest text-[10px]">Troubleshooting:</p>
+          <p>• Click the lock icon in the address bar and set Camera to <b>Allow</b>.</p>
+          <p>• Ensure no other apps (FaceTime/Zoom) are using the camera.</p>
+          <p>• Restart your browser if the issue persists.</p>
+        </div>
         <button onClick={requestAccess}
-          className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors">
-          Retry Camera
+          className="px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-colors">
+          Retry Activation
         </button>
       </div>
     );
   }
 
-  // ── LIVE ──────────────────────────────────────────────────────────────
   return (
-    <div className="relative w-full aspect-video bg-gray-900 rounded-xl overflow-hidden border border-gray-700 shadow-2xl">
-      {/* Video feed */}
+    <div className="relative w-full aspect-video glass-card overflow-hidden border-white/10 group">
       <Webcam
         key={retryKey}
         ref={webcamRef}
@@ -205,7 +224,7 @@ const WebcamComponent = ({ onFrameCapture }) => {
         screenshotFormat="image/jpeg"
         screenshotQuality={0.7}
         mirrored={true}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
         videoConstraints={{ facingMode: 'user' }}
         onUserMedia={() => setIsLive(true)}
         onUserMediaError={(err) => {
@@ -216,29 +235,26 @@ const WebcamComponent = ({ onFrameCapture }) => {
         }}
       />
 
-      {/* Hand skeleton canvas — perfectly overlaid */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none"
-        style={{ transform: 'scaleX(-1)' }} /* mirror to match webcam */
+        className="absolute inset-0 w-full h-full pointer-events-none z-20"
+        style={{ transform: 'scaleX(-1)' }}
       />
 
-      {/* LIVE badge */}
-      <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold z-10 ${
-        isLive ? 'bg-red-600/90 text-white' : 'bg-gray-700/80 text-gray-300'
+      <div className={`absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black tracking-widest z-30 transition-all ${
+        isLive ? 'bg-red-500 text-white shadow-lg shadow-red-900/50' : 'bg-slate-800 text-slate-400'
       }`}>
-        {isLive
-          ? <><span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />LIVE</>
-          : 'STARTING...'}
+        {isLive ? <><span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE ENGINE</> : 'INITIALIZING...'}
       </div>
 
-      {/* Skeleton legend */}
-      {isLive && (
-        <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur px-2.5 py-1 rounded-full z-10">
-          <span className="w-3 h-0.5 bg-indigo-400 inline-block rounded" />
-          <span className="text-[10px] text-indigo-300 font-medium">Hand Skeleton</span>
+      <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/10 px-3 py-1.5 rounded-xl z-30">
+        <div className="flex gap-1">
+          <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse" />
+          <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse delay-75" />
+          <div className="w-1 h-1 rounded-full bg-indigo-500 animate-pulse delay-150" />
         </div>
-      )}
+        <span className="text-[9px] text-slate-300 font-black uppercase tracking-[0.2em]">Neural Track Active</span>
+      </div>
     </div>
   );
 };
