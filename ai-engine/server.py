@@ -47,13 +47,7 @@ gesture_options = mp_vision.GestureRecognizerOptions(
 gesture_recognizer = mp_vision.GestureRecognizer.create_from_options(gesture_options)
 print("✅ Google Gesture Recognizer loaded!")
 
-# ── Load ASL ViT for A-Z alphabet ────────────────────────────────────────
-print("Loading ASL ViT model for alphabet fallback...")
-from transformers import pipeline
-vit_pipe = pipeline("image-classification", model="akahana/asl-vit", device="cpu")
-print("✅ ASL ViT loaded!")
-
-print("\nServer starting on ws://localhost:8000")
+print("\nServer starting...")
 print("=" * 60)
 
 # ── Gesture label → friendly display name ────────────────────────────────
@@ -68,52 +62,21 @@ GESTURE_MAP = {
     "None":        None,   # no gesture detected
 }
 
-# ── MediaPipe draw utilities for hand landmarks (for the fallback crop) ──
-mp_hands_sol = mp.solutions.hands
-hands_for_crop = mp_hands_sol.Hands(
-    static_image_mode=True,
-    max_num_hands=1,
-    min_detection_confidence=0.6,
-)
-
 # ── Shared inference state ────────────────────────────────────────────────
 latest_label      = "—"
 latest_confidence = 0.0
-latest_is_word    = False
+latest_is_word    = True
 latest_frame_data = None
 processing        = False
 
 # Sentence building config
 CONFIRM_COUNT        = 10    # same prediction N times in a row
 COOLDOWN             = 2.5   # seconds between appends
-CONFIDENCE_THRESHOLD = 60.0  # minimum % to accept (gesture recognizer is high accuracy)
+CONFIDENCE_THRESHOLD = 60.0  # minimum % to accept
 
 sentence_buffer = ""
 recent_preds    = deque(maxlen=15)
 last_append_time = time.time()
-
-
-def get_hand_crop_for_vit(img_rgb: np.ndarray, padding: int = 50):
-    """Use MediaPipe Hands to crop tightly around the hand for ViT alphabet input."""
-    results = hands_for_crop.process(img_rgb)
-    if results.multi_hand_landmarks:
-        h, w = img_rgb.shape[:2]
-        lm = results.multi_hand_landmarks[0]
-        xs = [p.x * w for p in lm.landmark]
-        ys = [p.y * h for p in lm.landmark]
-        x1 = max(0, int(min(xs)) - padding)
-        y1 = max(0, int(min(ys)) - padding)
-        x2 = min(w, int(max(xs)) + padding)
-        y2 = min(h, int(max(ys)) + padding)
-        side = max(x2 - x1, y2 - y1)
-        cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
-        x1 = max(0, cx - side // 2)
-        y1 = max(0, cy - side // 2)
-        x2 = min(w, cx + side // 2)
-        y2 = min(h, cy + side // 2)
-        return img_rgb[y1:y2, x1:x2], True
-    return img_rgb, False
-
 
 def predict_worker():
     global latest_label, latest_confidence, latest_is_word
@@ -128,7 +91,7 @@ def predict_worker():
                 img_pil   = Image.open(BytesIO(img_bytes)).convert("RGB")
                 img_rgb   = np.array(img_pil)
 
-                # ── Step 1: Google Gesture Recognizer ─────────────────
+                # ── Google Gesture Recognizer ─────────────────
                 mp_image = mp.Image(
                     image_format=mp.ImageFormat.SRGB,
                     data=img_rgb,
@@ -142,34 +105,15 @@ def predict_worker():
                     raw_name = top.category_name
                     gesture_conf = round(top.score * 100, 1)
                     mapped = GESTURE_MAP.get(raw_name)
-                    if mapped:   # not None (i.e. not "None" gesture)
+                    if mapped:
                         gesture_label = mapped[0]
 
-                # ── Step 2: ViT for alphabet (on hand crop) ───────────
-                hand_crop, hand_found = get_hand_crop_for_vit(img_rgb)
-                letter_label = None
-                letter_conf  = 0.0
-                if hand_found:
-                    crop_pil = Image.fromarray(hand_crop)
-                    vit_res  = vit_pipe(crop_pil)
-                    letter_label = vit_res[0]["label"]
-                    letter_conf  = round(vit_res[0]["score"] * 100, 1)
-
-                # ── Step 3: Decide which prediction wins ──────────────
-                # Gesture Recognizer wins if it detects a known gesture
-                # AND confidence >= letter confidence (or no letter found)
-                if gesture_label and gesture_conf >= letter_conf:
+                if gesture_label:
                     latest_label      = gesture_label
                     latest_confidence = gesture_conf
-                    latest_is_word    = True
-                elif letter_label and hand_found:
-                    latest_label      = letter_label
-                    latest_confidence = letter_conf
-                    latest_is_word    = False
                 else:
                     latest_label      = "—"
                     latest_confidence = 0.0
-                    latest_is_word    = False
 
             except Exception as e:
                 print(f"[predict_worker] {e}")
@@ -177,7 +121,6 @@ def predict_worker():
                 processing = False
 
         time.sleep(0.08)   # ~12 inferences/sec
-
 
 threading.Thread(target=predict_worker, daemon=True).start()
 
