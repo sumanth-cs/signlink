@@ -114,42 +114,22 @@ def predict_worker():
                     if mapped:
                         gesture_label = mapped[0]
 
-                # Fallback: Basic Heuristic Alphabet Detection
+                # Fallback: Basic Heuristic Alphabet & Extra Signs Detection
                 if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
-                    landmarks = result.hand_landmarks[0]
-                    
-                    def is_finger_up(tip_idx, pip_idx):
-                        # y is inverted (0 is top)
-                        return landmarks[tip_idx].y < landmarks[pip_idx].y
-
-                    index_up  = is_finger_up(8, 6)
-                    middle_up = is_finger_up(12, 10)
-                    ring_up   = is_finger_up(16, 14)
-                    pinky_up  = is_finger_up(20, 18)
-                    thumb_out = landmarks[4].x < landmarks[3].x if landmarks[4].x < landmarks[17].x else landmarks[4].x > landmarks[3].x # Very rough heuristic
-
-                    # A: All folded, thumb to the side
-                    if not index_up and not middle_up and not ring_up and not pinky_up and thumb_out:
-                        gesture_label, gesture_conf = "A", 85.0
-                    # B: All up except thumb
-                    elif index_up and middle_up and ring_up and pinky_up and not thumb_out:
-                        gesture_label, gesture_conf = "B", 85.0
-                    # L: Index up, thumb out, others folded
-                    elif index_up and thumb_out and not middle_up and not ring_up and not pinky_up:
-                        gesture_label, gesture_conf = "L", 85.0
-                    # W: Index, middle, ring up
-                    elif index_up and middle_up and ring_up and not pinky_up:
-                        gesture_label, gesture_conf = "W", 85.0
-                    # Y: Thumb and pinky out/up
-                    elif thumb_out and pinky_up and not index_up and not middle_up and not ring_up:
-                        gesture_label, gesture_conf = "Y", 85.0
+                    import heuristic_asl
+                    h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0])
+                    if h_label:
+                        gesture_label = h_label
+                        gesture_conf = h_conf
 
                 if gesture_label:
                     latest_label      = gesture_label
                     latest_confidence = gesture_conf
+                    latest_is_word    = len(gesture_label) > 1
                 else:
                     latest_label      = "—"
                     latest_confidence = 0.0
+                    latest_is_word    = False
 
             except Exception as e:
                 print(f"[predict_worker] {e}")
