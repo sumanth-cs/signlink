@@ -19,4 +19,4 @@ const isLocal = typeof window !== 'undefined' && (window.location.hostname === '
 export const API_URL = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://signlink-eb6o.onrender.com/api');
 
 // Note: Replace 'YOUR_PYTHON_APP.onrender.com' with the actual Render URL of your Python AI Engine
-export const WS_URL = process.env.REACT_APP_WS_URL || (isLocal ? 'ws://localhost:8000/ws' : 'wss://YOUR_PYTHON_APP.onrender.com/ws');
+export const WS_URL = process.env.REACT_APP_WS_URL || (isLocal ? 'ws://localhost:8000/ws' : 'wss://signlinkai-pezj.onrender.com');
