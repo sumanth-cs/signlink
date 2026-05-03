@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import WebcamComponent from '../components/Camera/WebcamComponent';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Trash2, Copy, Volume2, Zap, Circle, Play, Square, Delete, Mic, MicOff, MessageSquare, ShieldAlert, Sparkles } from 'lucide-react';
+import { API_URL } from '../utils/constants';
 
 const EMOTION_CONFIG = {
   happy:     { emoji: '😄', color: 'text-green-400',  bar: 'bg-green-500' },
@@ -100,7 +101,7 @@ const Translate = () => {
     setIsRefining(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/ai/refine', {
+      const response = await fetch(`${API_URL}/ai/refine`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

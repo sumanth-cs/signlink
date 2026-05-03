@@ -14,5 +14,9 @@ export const EMOTIONS = {
   neutral: { color: 'text-gray-400', icon: 'Meh' }
 };
 
-export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-export const WS_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000/ws';
+const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+export const API_URL = process.env.REACT_APP_API_URL || (isLocal ? 'http://localhost:5000/api' : 'https://signlink-eb6o.onrender.com/api');
+
+// Note: Replace 'YOUR_PYTHON_APP.onrender.com' with the actual Render URL of your Python AI Engine
+export const WS_URL = process.env.REACT_APP_WS_URL || (isLocal ? 'ws://localhost:8000/ws' : 'wss://YOUR_PYTHON_APP.onrender.com/ws');
