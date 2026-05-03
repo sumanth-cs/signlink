@@ -28,7 +28,7 @@ const Dashboard = () => {
         </Link>
 
         {/* Core Feature 2: Traveler Mode */}
-        <Link to="/translate" className="glass-card p-6 border-indigo-500/30 hover:border-indigo-400 transition-all premium-shadow group block relative overflow-hidden">
+        <Link to="/traveler" className="glass-card p-6 border-indigo-500/30 hover:border-indigo-400 transition-all premium-shadow group block relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4">
             <span className="bg-indigo-500 text-white text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-widest">New</span>
           </div>

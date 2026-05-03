@@ -35,7 +35,7 @@ const WebcamComponent = ({ onFrameCapture }) => {
     return () => clearInterval(interval);
   }, [isLive, onFrameCapture]);
 
-  // ── MediaPipe Hand Skeleton (browser-side, CDN) ───────────────────────
+  // ── MediaPipe Hand Skeleton (Clean & Professional) ───────────────────────
   const drawSkeleton = useCallback((results) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -48,11 +48,9 @@ const WebcamComponent = ({ onFrameCapture }) => {
     const w = canvas.width;
     const h = canvas.height;
 
-    // High-tech professional mesh styling
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'rgba(14, 165, 233, 0.6)'; // sky-500 glow
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)'; // sky-400
-    ctx.lineWidth = 2.5;
+    // Professional clean connections
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Clean white lines
+    ctx.lineWidth = 3;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     
@@ -63,8 +61,7 @@ const WebcamComponent = ({ onFrameCapture }) => {
       ctx.stroke();
     }
 
-    // Advanced precision dots
-    ctx.shadowBlur = 8;
+    // Elegant joints and fingertips
     for (let i = 0; i < landmarks.length; i++) {
       const x = landmarks[i].x * w;
       const y = landmarks[i].y * h;
@@ -73,36 +70,23 @@ const WebcamComponent = ({ onFrameCapture }) => {
 
       ctx.beginPath();
       if (isTip) {
-        // Futuristic reticle for fingertips
+        // Professional blue accent for fingertips
         ctx.arc(x, y, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = '#0ea5e9'; // sky-500
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        
-        // Outer targeting ring
-        ctx.beginPath();
-        ctx.arc(x, y, 11, 0, 2 * Math.PI);
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      } else if (isBase) {
-        // Base of the hand
-        ctx.arc(x, y, 8, 0, 2 * Math.PI);
-        ctx.fillStyle = '#38bdf8';
+        ctx.fillStyle = '#6366f1'; // Indigo-500
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
-      } else {
-        // Normal joint
-        ctx.arc(x, y, 3.5, 0, 2 * Math.PI);
+      } else if (isBase) {
+        // Subtle base joint
+        ctx.arc(x, y, 6, 0, 2 * Math.PI);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
-        ctx.strokeStyle = '#0284c7';
-        ctx.lineWidth = 1;
-        ctx.stroke();
+      } else {
+        // Clean white joint
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
       }
     }
   }, []);
@@ -222,10 +206,10 @@ const WebcamComponent = ({ onFrameCapture }) => {
         ref={webcamRef}
         audio={false}
         screenshotFormat="image/jpeg"
-        screenshotQuality={0.7}
+        screenshotQuality={0.4}
         mirrored={true}
         className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
-        videoConstraints={{ facingMode: 'user' }}
+        videoConstraints={{ facingMode: 'user', width: 320, height: 240 }}
         onUserMedia={() => setIsLive(true)}
         onUserMediaError={(err) => {
           setIsLive(false);

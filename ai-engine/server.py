@@ -24,10 +24,12 @@ import os
 
 warnings.filterwarnings("ignore")
 
-print("=" * 60)
-print("  SignLink AI Engine v3  —  WebSocket Server")
-print("  Powered by Google MediaPipe Gesture Recognizer")
-print("=" * 60)
+import sys
+
+print("=" * 60, flush=True)
+print("  SignLink AI Engine v3  —  WebSocket Server", flush=True)
+print("  Powered by Google MediaPipe Gesture Recognizer", flush=True)
+print("=" * 60, flush=True)
 
 # ── Load Google Gesture Recognizer ──────────────────────────────────────
 import mediapipe as mp
@@ -37,6 +39,7 @@ from mediapipe.tasks.python import vision as mp_vision
 TASK_FILE = os.path.join(os.path.dirname(__file__), "gesture_recognizer.task")
 assert os.path.exists(TASK_FILE), f"gesture_recognizer.task not found at {TASK_FILE}"
 
+print("Initializing GestureRecognizerOptions...", flush=True)
 gesture_options = mp_vision.GestureRecognizerOptions(
     base_options=mp_python.BaseOptions(model_asset_path=TASK_FILE),
     num_hands=1,
@@ -44,11 +47,12 @@ gesture_options = mp_vision.GestureRecognizerOptions(
     min_hand_presence_confidence=0.6,
     min_tracking_confidence=0.5,
 )
+print("Calling create_from_options...", flush=True)
 gesture_recognizer = mp_vision.GestureRecognizer.create_from_options(gesture_options)
-print("✅ Google Gesture Recognizer loaded!")
+print("✅ Google Gesture Recognizer loaded!", flush=True)
 
-print("\nServer starting...")
-print("=" * 60)
+print("\nServer starting...", flush=True)
+print("=" * 60, flush=True)
 
 # ── Gesture label → friendly display name ────────────────────────────────
 GESTURE_MAP = {
@@ -100,6 +104,8 @@ def predict_worker():
 
                 gesture_label = None
                 gesture_conf  = 0.0
+                
+                # Check official gesture recognizer first
                 if result.gestures and len(result.gestures) > 0:
                     top = result.gestures[0][0]
                     raw_name = top.category_name
@@ -107,6 +113,36 @@ def predict_worker():
                     mapped = GESTURE_MAP.get(raw_name)
                     if mapped:
                         gesture_label = mapped[0]
+
+                # Fallback: Basic Heuristic Alphabet Detection
+                if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
+                    landmarks = result.hand_landmarks[0]
+                    
+                    def is_finger_up(tip_idx, pip_idx):
+                        # y is inverted (0 is top)
+                        return landmarks[tip_idx].y < landmarks[pip_idx].y
+
+                    index_up  = is_finger_up(8, 6)
+                    middle_up = is_finger_up(12, 10)
+                    ring_up   = is_finger_up(16, 14)
+                    pinky_up  = is_finger_up(20, 18)
+                    thumb_out = landmarks[4].x < landmarks[3].x if landmarks[4].x < landmarks[17].x else landmarks[4].x > landmarks[3].x # Very rough heuristic
+
+                    # A: All folded, thumb to the side
+                    if not index_up and not middle_up and not ring_up and not pinky_up and thumb_out:
+                        gesture_label, gesture_conf = "A", 85.0
+                    # B: All up except thumb
+                    elif index_up and middle_up and ring_up and pinky_up and not thumb_out:
+                        gesture_label, gesture_conf = "B", 85.0
+                    # L: Index up, thumb out, others folded
+                    elif index_up and thumb_out and not middle_up and not ring_up and not pinky_up:
+                        gesture_label, gesture_conf = "L", 85.0
+                    # W: Index, middle, ring up
+                    elif index_up and middle_up and ring_up and not pinky_up:
+                        gesture_label, gesture_conf = "W", 85.0
+                    # Y: Thumb and pinky out/up
+                    elif thumb_out and pinky_up and not index_up and not middle_up and not ring_up:
+                        gesture_label, gesture_conf = "Y", 85.0
 
                 if gesture_label:
                     latest_label      = gesture_label
@@ -120,7 +156,7 @@ def predict_worker():
             finally:
                 processing = False
 
-        time.sleep(0.08)   # ~12 inferences/sec
+        time.sleep(0.02)   # ~50 inferences/sec max, drastically reduces lag
 
 threading.Thread(target=predict_worker, daemon=True).start()
 

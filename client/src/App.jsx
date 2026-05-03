@@ -7,6 +7,7 @@ import Learn from './pages/Learn';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Traveler from './pages/Traveler';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/traveler" element={<Traveler />} />
           </Routes>
         </main>
 
