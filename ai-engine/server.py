@@ -257,8 +257,9 @@ async def handle_client(websocket):
 
 
 async def main():
-    async with websockets.serve(handle_client, "0.0.0.0", 8000):
-        print("WebSocket server ready at ws://0.0.0.0:8000")
+    port = int(os.environ.get("PORT", 8000))
+    async with websockets.serve(handle_client, "0.0.0.0", port):
+        print(f"WebSocket server ready at ws://0.0.0.0:{port}")
         await asyncio.Future()
 
 
