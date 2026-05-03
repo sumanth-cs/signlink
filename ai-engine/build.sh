@@ -6,4 +6,4 @@ pip install -r requirements.txt
 # Render's headless Linux servers don't have libGL, causing instant crashes when importing mediapipe.
 # We must forcefully uninstall the GUI versions of OpenCV and ensure only the headless version is installed.
 pip uninstall -y opencv-contrib-python opencv-python
-pip install opencv-python-headless
+pip install --force-reinstall opencv-python-headless
