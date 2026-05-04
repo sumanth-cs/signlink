@@ -48,47 +48,83 @@ const WebcamComponent = ({ onFrameCapture }) => {
     const w = canvas.width;
     const h = canvas.height;
 
-    // Professional clean connections
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; // Clean white lines
-    ctx.lineWidth = 3;
+    // Futuristic Cybernetic Skeleton
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
     
+    // Draw Connections (Bones)
     for (const [a, b] of HAND_CONNECTIONS) {
       ctx.beginPath();
       ctx.moveTo(landmarks[a].x * w, landmarks[a].y * h);
       ctx.lineTo(landmarks[b].x * w, landmarks[b].y * h);
+      
+      // Cybernetic Neon Glow Effect
+      ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)'; // Neon Cyan Base
+      ctx.lineWidth = 4;
+      ctx.shadowColor = 'rgba(0, 240, 255, 0.8)';
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+
+      // Core white laser line
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.shadowBlur = 0;
       ctx.stroke();
     }
 
-    // Elegant joints and fingertips
+    // Draw Joints & Fingertips
     for (let i = 0; i < landmarks.length; i++) {
       const x = landmarks[i].x * w;
       const y = landmarks[i].y * h;
+      const z = landmarks[i].z || 0; // Use Z-axis for dynamic sizing
+      
+      // Adjust size based on depth (Z-axis) for 3D effect
+      const depthScale = Math.max(0.5, 1 - (z * -2)); 
+      
       const isTip = [4,8,12,16,20].includes(i);
       const isBase = i === 0;
 
       ctx.beginPath();
       if (isTip) {
-        // Professional blue accent for fingertips
-        ctx.arc(x, y, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = '#6366f1'; // Indigo-500
+        // Holographic Fingertips (Purple/Pink energy nodes)
+        ctx.arc(x, y, 6 * depthScale, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.9)'; // Purple-500
         ctx.fill();
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = 'rgba(232, 121, 249, 1)'; // Fuchsia glow
         ctx.lineWidth = 2;
+        ctx.shadowColor = 'rgba(168, 85, 247, 0.8)';
+        ctx.shadowBlur = 12;
         ctx.stroke();
       } else if (isBase) {
-        // Subtle base joint
-        ctx.arc(x, y, 6, 0, 2 * Math.PI);
+        // Core Palm Tracker
+        ctx.arc(x, y, 8 * depthScale, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fill();
+        ctx.strokeStyle = '#00f0ff'; // Cyan
+        ctx.lineWidth = 2;
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        
+        // Inner core
+        ctx.beginPath();
+        ctx.arc(x, y, 3 * depthScale, 0, 2 * Math.PI);
         ctx.fillStyle = '#ffffff';
         ctx.fill();
       } else {
-        // Clean white joint
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fillStyle = '#ffffff';
+        // Standard Joint Nodes (Hollow mechanical look)
+        ctx.arc(x, y, 4 * depthScale, 0, 2 * Math.PI);
+        ctx.fillStyle = '#0a0a0c'; // Dark center
         ctx.fill();
+        ctx.strokeStyle = '#00f0ff'; // Cyan rim
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
       }
     }
+    
+    // Reset shadow
+    ctx.shadowBlur = 0;
   }, []);
 
   const initMediaPipe = useCallback(() => {
