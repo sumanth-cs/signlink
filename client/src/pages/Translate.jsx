@@ -144,8 +144,20 @@ const Translate = () => {
   };
   
   const handleSpeak = () => {
-    if (sentence && 'speechSynthesis' in window)
-      window.speechSynthesis.speak(new SpeechSynthesisUtterance(sentence));
+    if (sentence && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(sentence);
+      const langMap = {
+        'en': 'en-US',
+        'es': 'es-ES',
+        'hi': 'hi-IN',
+        'ja': 'ja-JP',
+        'zh': 'zh-CN',
+        'fr': 'fr-FR',
+        'de': 'de-DE'
+      };
+      utterance.lang = langMap[targetLanguage] || 'en-US';
+      window.speechSynthesis.speak(utterance);
+    }
   };
 
   return (
@@ -175,19 +187,7 @@ const Translate = () => {
             {isEmergencyMode ? 'EMERGENCY MODE ACTIVE' : 'Emergency Mode'}
           </button>
 
-          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Translate To:</span>
-            <select 
-              value={targetLanguage} 
-              onChange={(e) => setTargetLanguage(e.target.value)}
-              className="bg-transparent text-sm font-bold text-white focus:outline-none cursor-pointer"
-            >
-              <option className="bg-[#0a0a0c]" value="en">English (US)</option>
-              <option className="bg-[#0a0a0c]" value="es">Spanish</option>
-              <option className="bg-[#0a0a0c]" value="hi">Hindi</option>
-              <option className="bg-[#0a0a0c]" value="ja">Japanese</option>
-            </select>
-          </div>
+
 
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-sm">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
@@ -280,21 +280,7 @@ const Translate = () => {
             </div>
           </div>
 
-          {/* Quick Help / Instructions */}
-          <div className="grid sm:grid-cols-3 gap-4">
-            <div className="glass-card p-4 border-white/5">
-              <p className="text-indigo-400 font-bold text-[10px] uppercase mb-1">Tip 1</p>
-              <p className="text-xs text-slate-400">Hold your hand steady for 2 seconds to confirm a sign.</p>
-            </div>
-            <div className="glass-card p-4 border-white/5">
-              <p className="text-purple-400 font-bold text-[10px] uppercase mb-1">Tip 2</p>
-              <p className="text-xs text-slate-400">Hearing mode works best in quiet environments.</p>
-            </div>
-            <div className="glass-card p-4 border-white/5">
-              <p className="text-pink-400 font-bold text-[10px] uppercase mb-1">Tip 3</p>
-              <p className="text-xs text-slate-400">Use "Emergency Mode" for high-priority situation signs.</p>
-            </div>
-          </div>
+          {/* Removed Tips section to keep UI minimalistic */}
         </div>
 
         {/* RIGHT: Sentence & Control (4 cols) */}
@@ -302,18 +288,37 @@ const Translate = () => {
           
           {/* Live Sentence Card */}
           <div className="glass-card p-6 border-indigo-500/20 premium-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-indigo-400" />
-                <h3 className="text-sm font-bold uppercase tracking-wider">Output Sentence</h3>
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-sm font-bold uppercase tracking-wider">Output Sentence</h3>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={handleCopy} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all">
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button onClick={handleSpeak} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all">
+                    <Volume2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button onClick={handleCopy} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all">
-                  <Copy className="w-4 h-4" />
-                </button>
-                <button onClick={handleSpeak} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all">
-                  <Volume2 className="w-4 h-4" />
-                </button>
+              
+              <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 w-fit">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Global Language:</span>
+                <select 
+                  value={targetLanguage} 
+                  onChange={(e) => setTargetLanguage(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-indigo-400 focus:outline-none cursor-pointer"
+                >
+                  <option className="bg-[#0a0a0c] text-white" value="en">🇺🇸 English</option>
+                  <option className="bg-[#0a0a0c] text-white" value="es">🇪🇸 Spanish</option>
+                  <option className="bg-[#0a0a0c] text-white" value="fr">🇫🇷 French</option>
+                  <option className="bg-[#0a0a0c] text-white" value="de">🇩🇪 German</option>
+                  <option className="bg-[#0a0a0c] text-white" value="hi">🇮🇳 Hindi</option>
+                  <option className="bg-[#0a0a0c] text-white" value="ja">🇯🇵 Japanese</option>
+                  <option className="bg-[#0a0a0c] text-white" value="zh">🇨🇳 Chinese</option>
+                </select>
               </div>
             </div>
             
