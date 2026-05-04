@@ -183,7 +183,7 @@ const WebcamComponent = ({ onFrameCapture }) => {
 
   if (status === 'error') {
     return (
-      <div className="w-full aspect-video glass-card border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center gap-6 p-8 text-center overflow-y-auto">
+      <div className="relative w-full aspect-video glass-card border-red-500/20 bg-red-500/5 flex flex-col items-center justify-center gap-4 p-8 pb-24 text-center overflow-y-auto">
         <p className="text-red-400 font-black text-lg uppercase tracking-wider">Camera Access Blocked</p>
         <div className="bg-black/40 border border-red-500/10 rounded-2xl p-6 text-xs text-slate-400 text-left w-full max-w-sm space-y-3">
           <p className="font-bold text-red-300 uppercase tracking-widest text-[10px]">Troubleshooting:</p>

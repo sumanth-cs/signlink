@@ -1,15 +1,21 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, BookOpen, Camera, Menu, User, LayoutDashboard } from 'lucide-react';
+import { Sparkles, BookOpen, Camera, Menu, User, LayoutDashboard, Sun, Moon } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
+  const [isDark, setIsDark] = React.useState(true);
   
   const navItems = [
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Translation Hub', path: '/translate', icon: Camera },
-    { name: 'Learning Center', path: '/learn', icon: BookOpen },
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard }
+    { name: 'Learning Center', path: '/learn', icon: BookOpen }
   ];
+
+  const toggleTheme = () => {
+    document.body.classList.toggle('light-theme');
+    setIsDark(!isDark);
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/5 bg-black/40 backdrop-blur-2xl">
@@ -53,17 +59,17 @@ const Header = () => {
 
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => document.body.classList.toggle('light-theme')}
+              onClick={toggleTheme}
               className="w-10 h-10 rounded-xl glass-card flex items-center justify-center text-slate-400 hover:text-yellow-400 hover:border-yellow-400/50 transition-all"
               title="Toggle Theme"
             >
-              <Sparkles size={18} />
+              {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <div className="hidden sm:flex flex-col items-end mr-2">
               <span className="text-xs font-bold text-white">{localStorage.getItem('userName') || 'Guest'}</span>
               <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Explorer Level 1</span>
             </div>
-            <Link to="/login" className="relative w-10 h-10 rounded-xl glass-card border-white/10 flex items-center justify-center hover:border-indigo-500/50 transition-all">
+            <Link to="/profile" className="relative w-10 h-10 rounded-xl glass-card border-white/10 flex items-center justify-center hover:border-indigo-500/50 transition-all">
               <User size={20} className="text-slate-400" />
               <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
             </Link>

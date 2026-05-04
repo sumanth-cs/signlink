@@ -1,26 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Star, Clock, Users, Trophy, Zap, Target, Award, CheckCircle2, TrendingUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Play, Trophy, Zap, Target, Award, CheckCircle2, TrendingUp, BookOpen, ExternalLink, Map } from 'lucide-react';
 
-// Tutorial Video Data
-const TUTORIAL_CATEGORIES = [
+const COURSE_CATEGORIES = [
+  {
+    id: 'roadmap',
+    label: 'Course Roadmap',
+    icon: '🗺️',
+    type: 'roadmap'
+  },
   {
     id: 'basics',
-    label: 'Basics & Alphabet',
+    label: 'Module 1: Basics',
     icon: '🔤',
+    type: 'video',
     videos: [
-      { id: 'v1', title: 'ASL Alphabet A–Z Complete Guide', channel: 'Bill Vicars', duration: '10:24', level: 'Beginner', views: '4.2M', youtubeId: 'tkMg8g8vVUo', emoji: '🔤', xp: 100 },
-      { id: 'v2', title: 'Learn ASL Numbers 1–20', channel: 'ASL Meredith', duration: '8:15', level: 'Beginner', views: '1.8M', youtubeId: 'pYoFrFEVVs4', emoji: '🔢', xp: 80 },
-      { id: 'v3', title: 'Fingerspelling Practice', channel: 'Start ASL', duration: '6:42', level: 'Beginner', views: '920K', youtubeId: 'SI4KMpZiEa8', emoji: '✋', xp: 60 },
+      { id: 'v1', title: 'ASL Alphabet A–Z Complete Guide', channel: 'Bill Vicars', duration: '10:24', level: 'Beginner', views: '4.2M', youtubeId: 'tkMg8g8vVUo', xp: 100 },
+      { id: 'v2', title: 'Learn ASL Numbers 1–20', channel: 'ASL Meredith', duration: '8:15', level: 'Beginner', views: '1.8M', youtubeId: 'pYoFrFEVVs4', xp: 80 },
+      { id: 'v3', title: 'Fingerspelling Practice', channel: 'Start ASL', duration: '6:42', level: 'Beginner', views: '920K', youtubeId: 'SI4KMpZiEa8', xp: 60 },
     ]
   },
   {
     id: 'greetings',
-    label: 'Greetings & Phrases',
+    label: 'Module 2: Phrases',
     icon: '👋',
+    type: 'video',
     videos: [
-      { id: 'v4', title: '50 Basic ASL Signs', channel: 'Bill Vicars', duration: '14:03', level: 'Beginner', views: '3.1M', youtubeId: '0FcwzMq4iWg', emoji: '👐', xp: 150 },
-      { id: 'v5', title: 'Common Greetings in ASL', channel: 'ASL That', duration: '5:30', level: 'Beginner', views: '680K', youtubeId: 'v1desDduz5M', emoji: '👋', xp: 50 },
-      { id: 'v6', title: 'Please, Thank You & Sorry', channel: 'ASL Meredith', duration: '4:18', level: 'Beginner', views: '430K', youtubeId: '3b8qYC3sEGM', emoji: '🤝', xp: 40 },
+      { id: 'v4', title: '50 Basic ASL Signs', channel: 'Bill Vicars', duration: '14:03', level: 'Beginner', views: '3.1M', youtubeId: '0FcwzMq4iWg', xp: 150 },
+      { id: 'v5', title: 'Common Greetings in ASL', channel: 'ASL That', duration: '5:30', level: 'Beginner', views: '680K', youtubeId: 'v1desDduz5M', xp: 50 },
+      { id: 'v6', title: 'Please, Thank You & Sorry', channel: 'ASL Meredith', duration: '4:18', level: 'Beginner', views: '430K', youtubeId: '3b8qYC3sEGM', xp: 40 },
+    ]
+  },
+  {
+    id: 'articles',
+    label: 'Articles & Theory',
+    icon: '📚',
+    type: 'article',
+    articles: [
+      { id: 'a1', title: 'Deaf Culture & History 101', readTime: '5 min read', xp: 30, image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80' },
+      { id: 'a2', title: 'Facial Expressions in ASL Grammar', readTime: '8 min read', xp: 50, image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80' },
+      { id: 'a3', title: 'How to structure an ASL Sentence', readTime: '6 min read', xp: 40, image: 'https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=600&q=80' },
     ]
   }
 ];
@@ -33,7 +51,7 @@ const LEVEL_COLORS = {
 
 const ProgressDashboard = ({ stats }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
       <div className="glass-card p-6 border-indigo-500/20 bg-indigo-500/5 relative overflow-hidden group">
         <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
           <Trophy size={60} />
@@ -41,7 +59,7 @@ const ProgressDashboard = ({ stats }) => {
         <p className="text-[10px] uppercase tracking-widest font-bold text-indigo-400 mb-1">Total XP</p>
         <p className="text-3xl font-black text-white">{stats.xp}</p>
         <div className="mt-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-indigo-500 w-[65%] transition-all duration-1000" />
+          <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${(stats.xp % 500) / 5}%` }} />
         </div>
       </div>
 
@@ -50,8 +68,8 @@ const ProgressDashboard = ({ stats }) => {
           <TrendingUp size={60} />
         </div>
         <p className="text-[10px] uppercase tracking-widest font-bold text-purple-400 mb-1">Level</p>
-        <p className="text-3xl font-black text-white">4</p>
-        <p className="text-xs text-slate-500 mt-2">Next level in 240 XP</p>
+        <p className="text-3xl font-black text-white">{stats.level}</p>
+        <p className="text-xs text-slate-500 mt-2">Next level in {500 - (stats.xp % 500)} XP</p>
       </div>
 
       <div className="glass-card p-6 border-pink-500/20 bg-pink-500/5 relative overflow-hidden group">
@@ -59,8 +77,8 @@ const ProgressDashboard = ({ stats }) => {
           <CheckCircle2 size={60} />
         </div>
         <p className="text-[10px] uppercase tracking-widest font-bold text-pink-400 mb-1">Completed</p>
-        <p className="text-3xl font-black text-white">12</p>
-        <p className="text-xs text-slate-500 mt-2">Signs Mastered</p>
+        <p className="text-3xl font-black text-white">{stats.completed}</p>
+        <p className="text-xs text-slate-500 mt-2">Modules Mastered</p>
       </div>
 
       <div className="glass-card p-6 border-emerald-500/20 bg-emerald-500/5 relative overflow-hidden group">
@@ -75,59 +93,66 @@ const ProgressDashboard = ({ stats }) => {
   );
 };
 
-const VideoCard = ({ video, onClick }) => {
+const RoadmapView = () => {
   return (
-    <div
-      className="group glass-card border-white/5 hover:border-indigo-500/30 overflow-hidden cursor-pointer transition-all duration-500"
-      onClick={() => onClick(video)}
-    >
-      <div className="relative aspect-video bg-slate-900">
-        <img
-          src={`https://img.youtube.com/vi/${video.youtubeId}/mqdefault.jpg`}
-          alt={video.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-100"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
-            <Play size={24} className="text-white ml-1" fill="white" />
-          </div>
-        </div>
-        <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">
-          {video.duration}
-        </div>
-        <div className="absolute top-3 left-3 bg-indigo-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
-          +{video.xp} XP
-        </div>
+    <div className="glass-card p-8 border-white/10 relative overflow-hidden">
+      <div className="absolute top-0 right-0 opacity-5">
+        <Map size={300} />
       </div>
-
-      <div className="p-5">
-        <h4 className="text-white font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-indigo-400 transition-colors">
-          {video.title}
-        </h4>
-        <div className="flex items-center justify-between">
-          <span className={`text-[10px] font-black uppercase tracking-tighter px-2 py-1 rounded-md border ${LEVEL_COLORS[video.level]}`}>
-            {video.level}
-          </span>
-          <div className="flex items-center gap-1.5 text-slate-500 text-[10px] font-bold">
-            <Users size={12} />
-            {video.views}
+      <h2 className="text-2xl font-black text-white mb-8">Your ASL Journey</h2>
+      
+      <div className="relative pl-8 border-l-2 border-indigo-500/30 space-y-10">
+        
+        <div className="relative">
+          <div className="absolute -left-[41px] top-0 w-5 h-5 bg-indigo-500 rounded-full border-4 border-[#0a0a0c] shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
+          <h3 className="text-xl font-bold text-indigo-400 mb-2">Phase 1: Foundations <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded ml-2">Completed</span></h3>
+          <p className="text-slate-400 text-sm mb-3">Master the 26 letters of the alphabet and basic numbers.</p>
+          <div className="flex gap-2">
+            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Alphabets</span>
+            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Numbers 1-20</span>
           </div>
         </div>
+
+        <div className="relative">
+          <div className="absolute -left-[41px] top-0 w-5 h-5 bg-purple-500 rounded-full border-4 border-[#0a0a0c] animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.6)]"></div>
+          <h3 className="text-xl font-bold text-white mb-2">Phase 2: Survival Phrases <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded ml-2">Current</span></h3>
+          <p className="text-slate-400 text-sm mb-3">Learn daily greetings, emergency phrases, and basic navigation.</p>
+          <div className="flex gap-2">
+            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Greetings</span>
+            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Food</span>
+            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Emergency</span>
+          </div>
+        </div>
+
+        <div className="relative">
+          <div className="absolute -left-[41px] top-0 w-5 h-5 bg-slate-700 rounded-full border-4 border-[#0a0a0c]"></div>
+          <h3 className="text-xl font-bold text-slate-500 mb-2">Phase 3: Grammar & Flow <span className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded ml-2">Locked</span></h3>
+          <p className="text-slate-600 text-sm mb-3">Understand facial expressions, sentence structure, and dynamic signing.</p>
+        </div>
+
       </div>
     </div>
   );
 };
 
 const Learn = () => {
-  const [activeCategory, setActiveCategory] = useState('basics');
+  const [activeCategory, setActiveCategory] = useState('roadmap');
   const [activeVideo, setActiveVideo] = useState(null);
   const [userStats, setUserStats] = useState({ xp: 1240, level: 4, completed: 12 });
 
-  const category = TUTORIAL_CATEGORIES.find(c => c.id === activeCategory);
+  const category = COURSE_CATEGORIES.find(c => c.id === activeCategory);
+
+  const handleCompleteContent = (xpAmount) => {
+    setUserStats(prev => ({
+      ...prev,
+      xp: prev.xp + xpAmount,
+      completed: prev.completed + 1,
+      level: Math.floor((prev.xp + xpAmount) / 500) + 1
+    }));
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
       
       {/* Premium Header */}
       <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
@@ -157,7 +182,7 @@ const Learn = () => {
 
       {/* Category Tabs */}
       <div className="flex gap-3 flex-wrap mb-10">
-        {TUTORIAL_CATEGORIES.map(cat => (
+        {COURSE_CATEGORIES.map(cat => (
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
@@ -173,46 +198,83 @@ const Learn = () => {
         ))}
       </div>
 
-      {/* Video Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-        {category?.videos.map(video => (
-          <VideoCard
-            key={video.id}
-            video={video}
-            onClick={setActiveVideo}
-          />
-        ))}
-      </div>
+      {/* Dynamic Content Area */}
+      {category?.type === 'roadmap' && <RoadmapView />}
 
-      {/* Smart Learning Section */}
-      <div className="mt-20">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-2.5 bg-yellow-500/10 rounded-xl text-yellow-500">
-            <Target size={24} />
-          </div>
-          <h2 className="text-2xl font-black text-white">Smart Learning Path</h2>
-        </div>
-        
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            { title: 'Interactive Quizzes', desc: 'Test your memory with real-time recognition tests.', icon: '🎯', color: 'border-blue-500/20' },
-            { title: 'Pose Accuracy', desc: 'Get AI feedback on your hand shapes and movements.', icon: '🖐️', color: 'border-purple-500/20' },
-            { title: 'Daily Challenges', desc: 'Unlock bonus XP by completing 5 signs daily.', icon: '⚡', color: 'border-pink-500/20' },
-          ].map((item, i) => (
-            <div key={i} className={`glass-card p-6 border ${item.color} group hover:bg-white/5 transition-all cursor-pointer`}>
-              <span className="text-3xl mb-4 block group-hover:scale-110 transition-transform">{item.icon}</span>
-              <h3 className="text-lg font-bold text-white mb-2">{item.title}</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">{item.desc}</p>
+      {category?.type === 'video' && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {category.videos.map(video => (
+            <div
+              key={video.id}
+              className="group glass-card border-white/5 hover:border-indigo-500/30 overflow-hidden cursor-pointer transition-all duration-500"
+              onClick={() => setActiveVideo(video)}
+            >
+              <div className="relative aspect-video bg-slate-900">
+                <img
+                  src={`https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`}
+                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80'; }}
+                  alt={video.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-100"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
+                    <Play size={24} className="text-white ml-1" fill="white" />
+                  </div>
+                </div>
+                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">
+                  {video.duration}
+                </div>
+                <div className="absolute top-3 left-3 bg-indigo-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
+                  +{video.xp} XP
+                </div>
+              </div>
+              <div className="p-5">
+                <h4 className="text-white font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-indigo-400 transition-colors">
+                  {video.title}
+                </h4>
+                <div className="flex items-center justify-between">
+                  <span className={`text-[10px] font-black uppercase tracking-tighter px-2 py-1 rounded-md border ${LEVEL_COLORS[video.level]}`}>
+                    {video.level}
+                  </span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      )}
+
+      {category?.type === 'article' && (
+        <div className="grid sm:grid-cols-2 gap-6">
+          {category.articles.map(article => (
+            <div key={article.id} className="glass-card flex overflow-hidden border-white/5 hover:border-purple-500/30 group transition-all">
+              <div className="w-1/3 relative overflow-hidden">
+                <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80" />
+              </div>
+              <div className="w-2/3 p-6 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-2">{article.title}</h3>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 font-bold">
+                    <BookOpen size={14} /> {article.readTime}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-4">
+                  <span className="text-xs font-black text-purple-400 bg-purple-500/10 px-2 py-1 rounded">+{article.xp} XP</span>
+                  <button onClick={() => handleCompleteContent(article.xp)} className="flex items-center gap-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
+                    Read Article <ExternalLink size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Video Modal */}
       {activeVideo && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6" onClick={() => setActiveVideo(null)}>
-          <div className="glass-card w-full max-w-4xl border-white/10 overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
-            <div className="aspect-video">
+        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in" onClick={() => setActiveVideo(null)}>
+          <div className="glass-card w-full max-w-4xl border-white/10 overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="aspect-video bg-black">
               <iframe
                 className="w-full h-full"
                 src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0`}
@@ -227,10 +289,14 @@ const Learn = () => {
                 <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">{activeVideo.channel}</p>
               </div>
               <button 
-                onClick={() => setActiveVideo(null)}
-                className="px-8 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all"
+                onClick={() => {
+                  handleCompleteContent(activeVideo.xp);
+                  setActiveVideo(null);
+                }}
+                className="px-8 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-black transition-all flex items-center gap-2"
               >
-                Done Watching
+                <CheckCircle2 size={20} />
+                Mark Completed (+{activeVideo.xp} XP)
               </button>
             </div>
           </div>
