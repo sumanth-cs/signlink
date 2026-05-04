@@ -22,7 +22,7 @@ const Translate = () => {
   // Advanced Features State
   const [isListening, setIsListening] = useState(false);
   const [captions, setCaptions] = useState('');
-  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+
   const [isRefining, setIsRefining] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('en');
 
@@ -161,7 +161,7 @@ const Translate = () => {
   };
 
   return (
-    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-500 ${isEmergencyMode ? 'bg-red-950/20' : ''}`}>
+    <div className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-500`}>
 
       {/* Premium Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -175,20 +175,6 @@ const Translate = () => {
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
-          <button
-            onClick={() => setIsEmergencyMode(!isEmergencyMode)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
-              isEmergencyMode 
-                ? 'bg-red-600 text-white animate-pulse shadow-lg shadow-red-900/50' 
-                : 'bg-white/5 text-red-400 border border-red-400/20 hover:bg-red-400/10'
-            }`}
-          >
-            <ShieldAlert className="w-4 h-4" />
-            {isEmergencyMode ? 'EMERGENCY MODE ACTIVE' : 'Emergency Mode'}
-          </button>
-
-
-
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-sm">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
             <span className="text-slate-300 font-medium">{isConnected ? 'AI Engine Live' : 'AI Offline'}</span>

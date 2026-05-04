@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Sparkles, BookOpen, Camera, Menu, User, LayoutDashboard, Sun, Moon } from 'lucide-react';
+import { Sparkles, BookOpen, Camera, Menu, User, LayoutDashboard, Sun, Moon, Plane } from 'lucide-react';
 
 const Header = () => {
   const location = useLocation();
@@ -9,6 +9,7 @@ const Header = () => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Translation Hub', path: '/translate', icon: Camera },
+    { name: 'Traveler Mode', path: '/traveler', icon: Plane },
     { name: 'Learning Center', path: '/learn', icon: BookOpen }
   ];
 

@@ -209,7 +209,7 @@ const WebcamComponent = ({ onFrameCapture }) => {
         screenshotQuality={0.4}
         mirrored={true}
         className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
-        videoConstraints={{ facingMode: 'user', width: 320, height: 240 }}
+        videoConstraints={{ facingMode: 'user' }}
         onUserMedia={() => setIsLive(true)}
         onUserMediaError={(err) => {
           setIsLive(false);
