@@ -1,55 +1,17 @@
-import React, { useState } from 'react';
-import { Play, Trophy, Zap, Target, Award, CheckCircle2, TrendingUp, BookOpen, ExternalLink, Map } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Play, Trophy, Zap, CheckCircle2, TrendingUp, BookOpen, ExternalLink, Lock, Check, ChevronRight } from 'lucide-react';
 
-const COURSE_CATEGORIES = [
-  {
-    id: 'roadmap',
-    label: 'Course Roadmap',
-    icon: '🗺️',
-    type: 'roadmap'
-  },
-  {
-    id: 'basics',
-    label: 'Module 1: Basics',
-    icon: '🔤',
-    type: 'video',
-    videos: [
-      { id: 'v1', title: 'ASL Alphabet A–Z Complete Guide', channel: 'Bill Vicars', duration: '10:24', level: 'Beginner', views: '4.2M', youtubeId: 'tkMg8g8vVUo', xp: 100 },
-      { id: 'v2', title: 'Learn ASL Numbers 1–20', channel: 'ASL Meredith', duration: '8:15', level: 'Beginner', views: '1.8M', youtubeId: 'pYoFrFEVVs4', xp: 80 },
-      { id: 'v3', title: 'Fingerspelling Practice', channel: 'Start ASL', duration: '6:42', level: 'Beginner', views: '920K', youtubeId: 'SI4KMpZiEa8', xp: 60 },
-    ]
-  },
-  {
-    id: 'greetings',
-    label: 'Module 2: Phrases',
-    icon: '👋',
-    type: 'video',
-    videos: [
-      { id: 'v4', title: '50 Basic ASL Signs', channel: 'Bill Vicars', duration: '14:03', level: 'Beginner', views: '3.1M', youtubeId: '0FcwzMq4iWg', xp: 150 },
-      { id: 'v5', title: 'Common Greetings in ASL', channel: 'ASL That', duration: '5:30', level: 'Beginner', views: '680K', youtubeId: 'v1desDduz5M', xp: 50 },
-      { id: 'v6', title: 'Please, Thank You & Sorry', channel: 'ASL Meredith', duration: '4:18', level: 'Beginner', views: '430K', youtubeId: '3b8qYC3sEGM', xp: 40 },
-    ]
-  },
-  {
-    id: 'articles',
-    label: 'Articles & Theory',
-    icon: '📚',
-    type: 'article',
-    articles: [
-      { id: 'a1', title: 'Deaf Culture & History 101', readTime: '5 min read', xp: 30, image: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80' },
-      { id: 'a2', title: 'Facial Expressions in ASL Grammar', readTime: '8 min read', xp: 50, image: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&q=80' },
-      { id: 'a3', title: 'How to structure an ASL Sentence', readTime: '6 min read', xp: 40, image: 'https://images.unsplash.com/photo-1456406644174-8ddd4cd52a06?w=600&q=80' },
-    ]
-  }
+const COURSE_CURRICULUM = [
+  { id: 'm1', type: 'video', title: 'Phase 1: Alphabet A-Z', desc: 'Master the 26 letters of American Sign Language.', xp: 100, youtubeId: 'tkMg8g8vVUo', channel: 'ASL Basics' },
+  { id: 'm2', type: 'video', title: 'Phase 2: Numbers 1-20', desc: 'Learn to count and sign numbers fluently.', xp: 80, youtubeId: 'S374c43pYmE', channel: 'ASL Basics' },
+  { id: 'm3', type: 'article', title: 'Theory: Deaf Culture 101', desc: 'Essential reading on Deaf culture, history, and community guidelines.', xp: 50, link: 'https://www.nad.org/resources/american-sign-language/community-and-culture-frequently-asked-questions/' },
+  { id: 'm4', type: 'video', title: 'Phase 3: Basic Greetings', desc: 'Learn how to say Hello, How are you, and Good morning.', xp: 150, youtubeId: '0FcwzMq4iWg', channel: 'Sign Language 101' },
+  { id: 'm5', type: 'video', title: 'Phase 4: Manners & Etiquette', desc: 'Essential polite phrases: Please, Thank You, and Sorry.', xp: 100, youtubeId: 'kYJ4M6u2j34', channel: 'ASL Basics' },
+  { id: 'm6', type: 'article', title: 'Theory: ASL Grammar', desc: 'Understanding the importance of facial expressions and syntax.', xp: 75, link: 'https://www.handspeak.com/learn/334/' },
+  { id: 'm7', type: 'video', title: 'Phase 5: Emergency Signs', desc: 'Critical survival signs: Help, Doctor, Hospital, and Police.', xp: 200, youtubeId: '63QYyU5T56Q', channel: 'Emergency ASL' }
 ];
 
-const LEVEL_COLORS = {
-  Beginner:     'bg-green-500/10 text-green-400 border-green-500/20',
-  Intermediate: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-  Advanced:     'bg-red-500/10 text-red-400 border-red-500/20',
-};
-
-const ProgressDashboard = ({ stats }) => {
+const ProgressDashboard = ({ xp, level, completedCount }) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
       <div className="glass-card p-6 border-indigo-500/20 bg-indigo-500/5 relative overflow-hidden group">
@@ -57,9 +19,9 @@ const ProgressDashboard = ({ stats }) => {
           <Trophy size={60} />
         </div>
         <p className="text-[10px] uppercase tracking-widest font-bold text-indigo-400 mb-1">Total XP</p>
-        <p className="text-3xl font-black text-white">{stats.xp}</p>
+        <p className="text-3xl font-black text-white">{xp}</p>
         <div className="mt-4 h-1.5 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${(stats.xp % 500) / 5}%` }} />
+          <div className="h-full bg-indigo-500 transition-all duration-1000" style={{ width: `${(xp % 500) / 5}%` }} />
         </div>
       </div>
 
@@ -68,8 +30,8 @@ const ProgressDashboard = ({ stats }) => {
           <TrendingUp size={60} />
         </div>
         <p className="text-[10px] uppercase tracking-widest font-bold text-purple-400 mb-1">Level</p>
-        <p className="text-3xl font-black text-white">{stats.level}</p>
-        <p className="text-xs text-slate-500 mt-2">Next level in {500 - (stats.xp % 500)} XP</p>
+        <p className="text-3xl font-black text-white">{level}</p>
+        <p className="text-xs text-slate-500 mt-2">Next level in {500 - (xp % 500)} XP</p>
       </div>
 
       <div className="glass-card p-6 border-pink-500/20 bg-pink-500/5 relative overflow-hidden group">
@@ -77,7 +39,7 @@ const ProgressDashboard = ({ stats }) => {
           <CheckCircle2 size={60} />
         </div>
         <p className="text-[10px] uppercase tracking-widest font-bold text-pink-400 mb-1">Completed</p>
-        <p className="text-3xl font-black text-white">{stats.completed}</p>
+        <p className="text-3xl font-black text-white">{completedCount}</p>
         <p className="text-xs text-slate-500 mt-2">Modules Mastered</p>
       </div>
 
@@ -93,215 +55,169 @@ const ProgressDashboard = ({ stats }) => {
   );
 };
 
-const RoadmapView = () => {
-  return (
-    <div className="glass-card p-8 border-white/10 relative overflow-hidden">
-      <div className="absolute top-0 right-0 opacity-5">
-        <Map size={300} />
-      </div>
-      <h2 className="text-2xl font-black text-white mb-8">Your ASL Journey</h2>
-      
-      <div className="relative pl-8 border-l-2 border-indigo-500/30 space-y-10">
-        
-        <div className="relative">
-          <div className="absolute -left-[41px] top-0 w-5 h-5 bg-indigo-500 rounded-full border-4 border-[#0a0a0c] shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div>
-          <h3 className="text-xl font-bold text-indigo-400 mb-2">Phase 1: Foundations <span className="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded ml-2">Completed</span></h3>
-          <p className="text-slate-400 text-sm mb-3">Master the 26 letters of the alphabet and basic numbers.</p>
-          <div className="flex gap-2">
-            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Alphabets</span>
-            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Numbers 1-20</span>
-          </div>
-        </div>
-
-        <div className="relative">
-          <div className="absolute -left-[41px] top-0 w-5 h-5 bg-purple-500 rounded-full border-4 border-[#0a0a0c] animate-pulse shadow-[0_0_15px_rgba(168,85,247,0.6)]"></div>
-          <h3 className="text-xl font-bold text-white mb-2">Phase 2: Survival Phrases <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded ml-2">Current</span></h3>
-          <p className="text-slate-400 text-sm mb-3">Learn daily greetings, emergency phrases, and basic navigation.</p>
-          <div className="flex gap-2">
-            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Greetings</span>
-            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Food</span>
-            <span className="text-xs px-2 py-1 bg-white/5 rounded-md text-slate-300">Emergency</span>
-          </div>
-        </div>
-
-        <div className="relative">
-          <div className="absolute -left-[41px] top-0 w-5 h-5 bg-slate-700 rounded-full border-4 border-[#0a0a0c]"></div>
-          <h3 className="text-xl font-bold text-slate-500 mb-2">Phase 3: Grammar & Flow <span className="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded ml-2">Locked</span></h3>
-          <p className="text-slate-600 text-sm mb-3">Understand facial expressions, sentence structure, and dynamic signing.</p>
-        </div>
-
-      </div>
-    </div>
-  );
-};
-
 const Learn = () => {
-  const [activeCategory, setActiveCategory] = useState('roadmap');
-  const [activeVideo, setActiveVideo] = useState(null);
-  const [userStats, setUserStats] = useState({ xp: 1240, level: 4, completed: 12 });
+  const [completedModules, setCompletedModules] = useState([]);
+  const [activeItem, setActiveItem] = useState(null);
+  
+  const xp = completedModules.reduce((total, id) => {
+    const mod = COURSE_CURRICULUM.find(c => c.id === id);
+    return total + (mod ? mod.xp : 0);
+  }, 0);
+  
+  const level = Math.floor(xp / 500) + 1;
 
-  const category = COURSE_CATEGORIES.find(c => c.id === activeCategory);
+  const handleComplete = () => {
+    if (activeItem && !completedModules.includes(activeItem.id)) {
+      setCompletedModules(prev => [...prev, activeItem.id]);
+    }
+    setActiveItem(null);
+  };
 
-  const handleCompleteContent = (xpAmount) => {
-    setUserStats(prev => ({
-      ...prev,
-      xp: prev.xp + xpAmount,
-      completed: prev.completed + 1,
-      level: Math.floor((prev.xp + xpAmount) / 500) + 1
-    }));
+  const openItem = (item) => {
+    setActiveItem(item);
+    if (item.type === 'article') {
+      window.open(item.link, '_blank');
+    }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-fade-in">
       
-      {/* Premium Header */}
-      <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
-        <div>
-          <h1 className="text-4xl font-black text-white mb-3">
-            Learning <span className="accent-gradient">Center</span>
-          </h1>
-          <p className="text-slate-400 max-w-xl">
-            Master the art of sign language with our structured, gamified curriculum. Earn XP, level up, and unlock new categories.
-          </p>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="glass-card px-4 py-2 border-indigo-500/20 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
-              <Award size={20} />
-            </div>
-            <div>
-              <p className="text-[10px] uppercase font-bold text-slate-500">Daily Rank</p>
-              <p className="text-sm font-black text-white">#12 (Top 5%)</p>
-            </div>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="text-center mb-12">
+        <h1 className="text-4xl md:text-5xl font-black text-white mb-4">
+          ASL Masterclass <span className="accent-gradient">Roadmap</span>
+        </h1>
+        <p className="text-slate-400 max-w-2xl mx-auto">
+          A highly structured, linear progression course designed to take you from a complete beginner to a confident signer. Complete modules consecutively to unlock the next phase.
+        </p>
       </div>
 
-      {/* Progress Dashboard */}
-      <ProgressDashboard stats={userStats} />
+      <ProgressDashboard xp={xp} level={level} completedCount={completedModules.length} />
 
-      {/* Category Tabs */}
-      <div className="flex gap-3 flex-wrap mb-10">
-        {COURSE_CATEGORIES.map(cat => (
-          <button
-            key={cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-            className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-sm font-bold transition-all duration-300 border ${
-              activeCategory === cat.id
-                ? 'bg-indigo-600 border-indigo-500 text-white shadow-xl shadow-indigo-500/20'
-                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <span className="text-lg">{cat.icon}</span>
-            {cat.label}
-          </button>
-        ))}
-      </div>
+      {/* Strict Linear Roadmap */}
+      <div className="relative pl-6 md:pl-12 border-l-4 border-white/5 space-y-12 my-16">
+        
+        {COURSE_CURRICULUM.map((module, index) => {
+          const isCompleted = completedModules.includes(module.id);
+          const isCurrent = !isCompleted && (index === 0 || completedModules.includes(COURSE_CURRICULUM[index - 1].id));
+          const isLocked = !isCompleted && !isCurrent;
 
-      {/* Dynamic Content Area */}
-      {category?.type === 'roadmap' && <RoadmapView />}
+          let statusColor = 'bg-slate-800 border-slate-700';
+          let statusIcon = <Lock size={14} className="text-slate-500" />;
+          if (isCompleted) {
+            statusColor = 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.4)]';
+            statusIcon = <Check size={14} className="text-white" />;
+          } else if (isCurrent) {
+            statusColor = 'bg-indigo-500 border-indigo-400 animate-pulse shadow-[0_0_20px_rgba(99,102,241,0.6)]';
+            statusIcon = <ChevronRight size={14} className="text-white" />;
+          }
 
-      {category?.type === 'video' && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {category.videos.map(video => (
-            <div
-              key={video.id}
-              className="group glass-card border-white/5 hover:border-indigo-500/30 overflow-hidden cursor-pointer transition-all duration-500"
-              onClick={() => setActiveVideo(video)}
-            >
-              <div className="relative aspect-video bg-slate-900">
-                <img
-                  src={`https://img.youtube.com/vi/${video.youtubeId}/hqdefault.jpg`}
-                  onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?w=600&q=80'; }}
-                  alt={video.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60 group-hover:opacity-100"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="w-14 h-14 rounded-full bg-indigo-500 flex items-center justify-center shadow-2xl shadow-indigo-500/40">
-                    <Play size={24} className="text-white ml-1" fill="white" />
+          return (
+            <div key={module.id} className={`relative glass-card p-6 border transition-all ${isCurrent ? 'border-indigo-500/50 bg-indigo-500/5 scale-[1.02]' : isLocked ? 'border-white/5 opacity-50 grayscale' : 'border-green-500/20 bg-green-500/5'}`}>
+              
+              {/* Timeline Dot */}
+              <div className={`absolute -left-[36px] md:-left-[60px] top-6 w-8 h-8 rounded-full border-4 border-[#0a0a0c] flex items-center justify-center ${statusColor}`}>
+                {statusIcon}
+              </div>
+
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${module.type === 'video' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                    {module.type === 'video' ? <Play size={20} fill="currentColor" /> : <BookOpen size={20} />}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className={`text-xl font-black ${isLocked ? 'text-slate-500' : 'text-white'}`}>{module.title}</h3>
+                      {isCompleted && <span className="text-[10px] uppercase font-bold text-green-400 bg-green-500/20 px-2 py-0.5 rounded">Completed</span>}
+                    </div>
+                    <p className="text-slate-400 text-sm mb-3">{module.desc}</p>
+                    <div className="flex gap-2">
+                      <span className="text-xs font-bold px-2 py-1 bg-white/5 rounded-md text-slate-300">+{module.xp} XP</span>
+                      {module.type === 'video' ? (
+                        <span className="text-xs font-bold px-2 py-1 bg-white/5 rounded-md text-slate-300">{module.channel}</span>
+                      ) : (
+                        <span className="text-xs font-bold px-2 py-1 bg-white/5 rounded-md text-slate-300">External Reading</span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg">
-                  {video.duration}
-                </div>
-                <div className="absolute top-3 left-3 bg-indigo-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-lg">
-                  +{video.xp} XP
-                </div>
-              </div>
-              <div className="p-5">
-                <h4 className="text-white font-bold text-sm leading-snug mb-2 line-clamp-2 group-hover:text-indigo-400 transition-colors">
-                  {video.title}
-                </h4>
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase tracking-tighter px-2 py-1 rounded-md border ${LEVEL_COLORS[video.level]}`}>
-                    {video.level}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {category?.type === 'article' && (
-        <div className="grid sm:grid-cols-2 gap-6">
-          {category.articles.map(article => (
-            <div key={article.id} className="glass-card flex overflow-hidden border-white/5 hover:border-purple-500/30 group transition-all">
-              <div className="w-1/3 relative overflow-hidden">
-                <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-80" />
-              </div>
-              <div className="w-2/3 p-6 flex flex-col justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-white mb-2">{article.title}</h3>
-                  <div className="flex items-center gap-2 text-xs text-slate-400 font-bold">
-                    <BookOpen size={14} /> {article.readTime}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-4">
-                  <span className="text-xs font-black text-purple-400 bg-purple-500/10 px-2 py-1 rounded">+{article.xp} XP</span>
-                  <button onClick={() => handleCompleteContent(article.xp)} className="flex items-center gap-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
-                    Read Article <ExternalLink size={14} />
+                  <button 
+                    disabled={isLocked || isCompleted}
+                    onClick={() => openItem(module)}
+                    className={`px-6 py-3 rounded-xl font-bold w-full md:w-auto transition-all flex items-center justify-center gap-2 ${
+                      isCompleted ? 'bg-white/5 text-slate-500 cursor-not-allowed' : 
+                      isLocked ? 'bg-white/5 text-slate-600 cursor-not-allowed' : 
+                      'bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-500/25'
+                    }`}
+                  >
+                    {isCompleted ? 'Reviewed' : isLocked ? 'Locked' : module.type === 'video' ? 'Watch Lesson' : 'Read Article'}
                   </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      {/* Video Modal */}
-      {activeVideo && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in" onClick={() => setActiveVideo(null)}>
-          <div className="glass-card w-full max-w-4xl border-white/10 overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="aspect-video bg-black">
-              <iframe
-                className="w-full h-full"
-                src={`https://www.youtube.com/embed/${activeVideo.youtubeId}?autoplay=1&rel=0`}
-                title={activeVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
             </div>
-            <div className="p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div>
-                <h3 className="text-2xl font-black text-white mb-2">{activeVideo.title}</h3>
-                <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">{activeVideo.channel}</p>
+          );
+        })}
+      </div>
+
+      {/* Video / Article Modal */}
+      {activeItem && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 animate-fade-in" onClick={() => setActiveItem(null)}>
+          <div className="glass-card w-full max-w-4xl border-white/10 overflow-hidden shadow-2xl flex flex-col" onClick={e => e.stopPropagation()}>
+            
+            {activeItem.type === 'video' ? (
+              <div className="aspect-video bg-black">
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${activeItem.youtubeId}?autoplay=1&rel=0`}
+                  title={activeItem.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
               </div>
-              <button 
-                onClick={() => {
-                  handleCompleteContent(activeVideo.xp);
-                  setActiveVideo(null);
-                }}
-                className="px-8 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-black transition-all flex items-center gap-2"
-              >
-                <CheckCircle2 size={20} />
-                Mark Completed (+{activeVideo.xp} XP)
-              </button>
+            ) : (
+              <div className="p-12 text-center bg-indigo-500/5">
+                <BookOpen size={64} className="mx-auto text-indigo-400 mb-6" />
+                <h2 className="text-3xl font-black text-white mb-4">Reading Assignment Opened!</h2>
+                <p className="text-slate-400 max-w-lg mx-auto mb-6">
+                  The article "{activeItem.title}" has been opened in a new tab. Please read it thoroughly to understand the core concepts.
+                </p>
+                <a href={activeItem.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 font-bold mb-8">
+                  Open again <ExternalLink size={16} />
+                </a>
+              </div>
+            )}
+
+            <div className="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[#0a0a0c]">
+              <div>
+                <h3 className="text-2xl font-black text-white mb-1">{activeItem.title}</h3>
+                <p className="text-slate-400 font-bold text-sm uppercase tracking-widest">
+                  {activeItem.type === 'video' ? 'Video Lesson' : 'Required Reading'}
+                </p>
+              </div>
+              <div className="flex gap-3 w-full md:w-auto">
+                <button 
+                  onClick={() => setActiveItem(null)}
+                  className="flex-1 md:flex-none px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-all"
+                >
+                  Close
+                </button>
+                <button 
+                  onClick={handleComplete}
+                  className="flex-1 md:flex-none px-8 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-black transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/25"
+                >
+                  <CheckCircle2 size={20} />
+                  Mark as Completed (+{activeItem.xp} XP)
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };
