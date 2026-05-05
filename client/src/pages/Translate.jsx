@@ -30,41 +30,56 @@ const Translate = () => {
   const recognitionRef = useRef(null);
 
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
+    if (!('webkitSpeechRecognition' in window)) {
+      console.warn('Speech recognition not supported in this browser.');
+      return;
+    }
+    
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
 
-      recognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
+    recognition.onresult = (event) => {
+      let currentTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        currentTranscript += event.results[i][0].transcript;
+      }
+      setCaptions(currentTranscript);
+    };
 
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-        setCaptions(finalTranscript || interimTranscript);
-      };
+    recognition.onerror = (e) => console.error('Speech Recognition Error:', e);
 
-      recognition.onend = () => {
-        if (isListening) recognition.start();
-      };
+    recognition.onend = () => {
+      // Auto-restart if it stops unexpectedly while supposed to be listening
+      if (recognitionRef.current && recognitionRef.current.isListeningInternal) {
+        try { recognition.start(); } catch(e) {}
+      }
+    };
 
-      recognitionRef.current = recognition;
+    recognitionRef.current = recognition;
+  }, []);
+
+  useEffect(() => {
+    if (!recognitionRef.current) return;
+    
+    // Sync internal state for the onend auto-restart
+    recognitionRef.current.isListeningInternal = isListening;
+
+    if (isListening) {
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        // Already started
+      }
+    } else {
+      recognitionRef.current.stop();
+      setCaptions(''); // Clear captions when turned off
     }
   }, [isListening]);
 
   const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      recognitionRef.current?.start();
-    }
-    setIsListening(!isListening);
+    setIsListening(prev => !prev);
   };
 
   const handleFrame = (frame) => {
