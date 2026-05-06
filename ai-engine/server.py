@@ -22,6 +22,10 @@ from PIL import Image
 from collections import deque
 import os
 import heuristic_asl
+import alphabet_cnn
+
+# Pre-load CNN model
+alphabet_cnn.load_cnn_model()
 
 warnings.filterwarnings("ignore")
 
@@ -70,15 +74,16 @@ GESTURE_MAP = {
 # ── Shared inference state ────────────────────────────────────────────────
 latest_label      = "—"
 latest_confidence = 0.0
-latest_is_word    = True
+latest_is_word    = False
 latest_frame_data = None
+latest_pred_id    = 0  # To track fresh predictions
 processing        = False
 global_mode       = "all"
 
 # Sentence building config
-CONFIRM_COUNT        = 10    # same prediction N times in a row
-COOLDOWN             = 2.5   # seconds between appends
-CONFIDENCE_THRESHOLD = 60.0  # minimum % to accept
+CONFIRM_COUNT        = 8     # frames needed for stability
+COOLDOWN             = 2.0   # seconds between appends
+CONFIDENCE_THRESHOLD = 45.0  # minimum % to accept (lowered for alphabets)
 
 sentence_buffer = ""
 recent_preds    = deque(maxlen=15)
@@ -86,7 +91,7 @@ last_append_time = time.time()
 
 def predict_worker():
     global latest_label, latest_confidence, latest_is_word
-    global latest_frame_data, processing, global_mode
+    global latest_frame_data, processing, global_mode, latest_pred_id
 
     while True:
         if latest_frame_data and not processing:
@@ -104,11 +109,24 @@ def predict_worker():
                 )
                 result = gesture_recognizer.recognize(mp_image)
 
+                # ── Recognition Logic ─────────────────
                 gesture_label = None
                 gesture_conf  = 0.0
-                
-                # Check official gesture recognizer first (ONLY if not in strict alphabet mode)
-                if global_mode != "alphabet":
+
+                if global_mode == "alphabet":
+                    # 1. Use the HIGH ACCURACY Legacy CNN Model for Alphabets
+                    if result.hand_landmarks and len(result.hand_landmarks) > 0:
+                        h, w, _ = img_rgb.shape
+                        gesture_label, gesture_conf = alphabet_cnn.detect_alphabet_cnn(result.hand_landmarks[0], (w, h))
+                        
+                        # 2. Heuristic Fallback for Alphabets (if CNN is unconfident)
+                        if (gesture_label is None or gesture_conf < 40.0):
+                            h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode="alphabet")
+                            if h_label and len(h_label) == 1: # Only take alphabets from heuristic here
+                                gesture_label = h_label
+                                gesture_conf = h_conf
+                elif global_mode == "words":
+                    # 1. Check official gesture recognizer for words
                     if result.gestures and len(result.gestures) > 0:
                         top = result.gestures[0][0]
                         raw_name = top.category_name
@@ -117,12 +135,28 @@ def predict_worker():
                         if mapped:
                             gesture_label = mapped[0]
 
-                # Fallback: Basic Heuristic Alphabet & Extra Signs Detection
-                if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
-                    h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode=global_mode)
-                    if h_label:
-                        gesture_label = h_label
-                        gesture_conf = h_conf
+                    # 2. Fallback to Heuristics (ONLY words)
+                    if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
+                        h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode="words")
+                        if h_label and len(h_label) > 1:
+                            gesture_label = h_label
+                            gesture_conf = h_conf
+                else: # "all" mode
+                    # Check official gesture recognizer first
+                    if result.gestures and len(result.gestures) > 0:
+                        top = result.gestures[0][0]
+                        raw_name = top.category_name
+                        gesture_conf = round(top.score * 100, 1)
+                        mapped = GESTURE_MAP.get(raw_name)
+                        if mapped:
+                            gesture_label = mapped[0]
+
+                    # Fallback to Heuristics (both)
+                    if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
+                        h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode="all")
+                        if h_label:
+                            gesture_label = h_label
+                            gesture_conf = h_conf
 
                 if gesture_label:
                     latest_label      = gesture_label
@@ -132,6 +166,8 @@ def predict_worker():
                     latest_label      = "—"
                     latest_confidence = 0.0
                     latest_is_word    = False
+                
+                latest_pred_id += 1 # Signal new prediction
 
             except Exception as e:
                 print(f"[predict_worker] {e}")
@@ -154,13 +190,15 @@ def get_emotion(confidence: float) -> dict:
 
 
 async def handle_client(websocket):
-    global latest_frame_data, sentence_buffer, recent_preds, last_append_time, global_mode
+    global latest_frame_data, sentence_buffer, recent_preds, last_append_time, global_mode, latest_label, latest_confidence, latest_is_word
 
     print(f"[+] Client connected: {websocket.remote_address}")
     sentence_buffer  = ""
     recent_preds     = deque(maxlen=15)
     last_append_time = time.time()
 
+    last_sent_pred_id = -1
+    
     try:
         async for message in websocket:
             # Handle control commands from frontend
@@ -173,7 +211,13 @@ async def handle_client(websocket):
                         elif cmd.get("action") == "clear":
                             sentence_buffer = ""
                         elif cmd.get("action") == "set_mode":
-                            global_mode = cmd.get("mode", "all")
+                            new_mode = cmd.get("mode", "all")
+                            if new_mode != global_mode:
+                                global_mode = new_mode
+                                recent_preds.clear()
+                                latest_label = "—"
+                                latest_confidence = 0.0
+                                last_sent_pred_id = latest_pred_id # Ignore past predictions
                     continue  # don't treat as frame
                 except Exception:
                     pass
@@ -181,31 +225,45 @@ async def handle_client(websocket):
             # Frame data (base64)
             latest_frame_data = message.split(",", 1)[1] if "," in message else message
 
-            label   = latest_label
-            conf    = latest_confidence
-            is_word = latest_is_word
+            # ONLY process if there is a NEW prediction from the worker
+            if latest_pred_id == last_sent_pred_id:
+                # No new prediction yet, just update the client with status
+                # but don't add to recent_preds or sentence
+                pass
+            else:
+                last_sent_pred_id = latest_pred_id
+                
+                label   = latest_label
+                conf    = latest_confidence
+                is_word = latest_is_word
+                
+                recent_preds.append(label)
+                
+                now = time.time()
+                word_added = False
+                
+                # Dynamic threshold: Alphabets need less confidence than words
+                req_conf = CONFIDENCE_THRESHOLD if not is_word else 70.0
+                req_count = CONFIRM_COUNT if not is_word else 10 # Words need more stability
 
-            recent_preds.append(label)
-            now = time.time()
+                if (recent_preds.count(label) >= req_count
+                        and (now - last_append_time) > COOLDOWN
+                        and label not in ["—", "none", "nothing"]
+                        and conf >= req_conf):
 
-            word_added = False
-            if (recent_preds.count(label) >= CONFIRM_COUNT
-                    and (now - last_append_time) > COOLDOWN
-                    and label not in ["—", "none", "nothing"]
-                    and conf >= CONFIDENCE_THRESHOLD):
-
-                if is_word:
-                    sentence_buffer += label + "  "
-                else:
-                    sentence_buffer += label.upper()
-
-                last_append_time = now
-                word_added = True
+                    if is_word:
+                        sentence_buffer += label + "  "
+                    else:
+                        sentence_buffer += label.upper()
+                    
+                    last_append_time = now
+                    word_added = True
+                    recent_preds.clear() # Clear after successful detection
 
             payload = {
                 "type":       "prediction",
-                "text":       label,
-                "confidence": conf,
+                "text":       latest_label,
+                "confidence": latest_confidence,
                 "sentence":   sentence_buffer,
                 "sentiment":  get_emotion(conf),
                 "word_added": word_added,
