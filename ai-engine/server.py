@@ -21,6 +21,7 @@ from io import BytesIO
 from PIL import Image
 from collections import deque
 import os
+import heuristic_asl
 
 warnings.filterwarnings("ignore")
 
@@ -106,18 +107,18 @@ def predict_worker():
                 gesture_label = None
                 gesture_conf  = 0.0
                 
-                # Check official gesture recognizer first
-                if result.gestures and len(result.gestures) > 0:
-                    top = result.gestures[0][0]
-                    raw_name = top.category_name
-                    gesture_conf = round(top.score * 100, 1)
-                    mapped = GESTURE_MAP.get(raw_name)
-                    if mapped:
-                        gesture_label = mapped[0]
+                # Check official gesture recognizer first (ONLY if not in strict alphabet mode)
+                if global_mode != "alphabet":
+                    if result.gestures and len(result.gestures) > 0:
+                        top = result.gestures[0][0]
+                        raw_name = top.category_name
+                        gesture_conf = round(top.score * 100, 1)
+                        mapped = GESTURE_MAP.get(raw_name)
+                        if mapped:
+                            gesture_label = mapped[0]
 
                 # Fallback: Basic Heuristic Alphabet & Extra Signs Detection
                 if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
-                    import heuristic_asl
                     h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode=global_mode)
                     if h_label:
                         gesture_label = h_label
@@ -137,7 +138,7 @@ def predict_worker():
             finally:
                 processing = False
 
-        time.sleep(0.02)   # ~50 inferences/sec max, drastically reduces lag
+        time.sleep(0.005)   # Ultra-low latency, up to 200 inferences/sec
 
 threading.Thread(target=predict_worker, daemon=True).start()
 
