@@ -60,48 +60,48 @@ def detect_alphabet_and_signs(landmarks, mode="all"):
     if mode in ["all", "words"]:
         # 1. "I Love You": Index, Pinky, and Thumb extended.
         if idx_up and pnk_up and thumb_out and not mid_up and not rng_up:
-        return ("I Love You", 98.0)
-        
-    # 2. "Rock On / Heavy Metal": Index and Pinky extended, thumb folded.
-    if idx_up and pnk_up and not mid_up and not rng_up and not thumb_out:
-        return ("Rock On 🤘", 95.0)
-
-    # 3. "Call Me": Thumb and Pinky extended, others folded.
-    if thumb_out and pnk_up and not idx_up and not mid_up and not rng_up:
-        return ("Call Me", 96.0)
-
-    # 4. "Peace / Victory": Index and Middle extended and apart (V shape).
-    if idx_up and mid_up and not rng_up and not pnk_up:
-        if distance(index_tip, middle_tip) >= (palm_size * 0.4):
-            return ("Peace ✌️", 94.0)
+            return ("I Love You", 98.0)
             
-    # 5. "Fingers Crossed / Hope": Index and Middle crossed over each other.
-    if idx_up and mid_up and not rng_up and not pnk_up:
-        if is_right_hand and index_tip.x > middle_tip.x: return ("Fingers Crossed 🤞", 92.0)
-        if not is_right_hand and index_tip.x < middle_tip.x: return ("Fingers Crossed 🤞", 92.0)
+        # 2. "Rock On / Heavy Metal": Index and Pinky extended, thumb folded.
+        if idx_up and pnk_up and not mid_up and not rng_up and not thumb_out:
+            return ("Rock On 🤘", 95.0)
 
-    # 6. "OK / Perfect": Index and Thumb touching, other 3 fingers extended.
-    if up_count >= 2 and distance(index_tip, thumb_tip) < (palm_size * 0.3):
-        return ("OK / Perfect 👌", 97.0)
+        # 3. "Call Me": Thumb and Pinky extended, others folded.
+        if thumb_out and pnk_up and not idx_up and not mid_up and not rng_up:
+            return ("Call Me", 96.0)
 
-    # 7. "Stop / Wait": All fingers extended straight up, tight or loose.
-    if up_count == 4 and not thumb_folded and thumb_out:
-        # If the hand is strictly pointing vertically upwards
-        if index_tip.y < index_mcp.y and pinky_tip.y < pinky_mcp.y:
-            return ("Stop / Hello ✋", 90.0)
+        # 4. "Peace / Victory": Index and Middle extended and apart (V shape).
+        if idx_up and mid_up and not rng_up and not pnk_up:
+            if distance(index_tip, middle_tip) >= (palm_size * 0.4):
+                return ("Peace ✌️", 94.0)
+                
+        # 5. "Fingers Crossed / Hope": Index and Middle crossed over each other.
+        if idx_up and mid_up and not rng_up and not pnk_up:
+            if is_right_hand and index_tip.x > middle_tip.x: return ("Fingers Crossed 🤞", 92.0)
+            if not is_right_hand and index_tip.x < middle_tip.x: return ("Fingers Crossed 🤞", 92.0)
 
-    # 8. "No": Index and Middle fingers tapping the thumb (Static check: pinching).
-    if not pnk_up and not rng_up and distance(index_tip, thumb_tip) < (palm_size * 0.4) and distance(middle_tip, thumb_tip) < (palm_size * 0.4):
-        return ("No", 89.0)
+        # 6. "OK / Perfect": Index and Thumb touching, other 3 fingers extended.
+        if up_count >= 2 and distance(index_tip, thumb_tip) < (palm_size * 0.3):
+            return ("OK / Perfect 👌", 97.0)
 
-    # 9. "Loser": Index up, Thumb out (L shape)
-    if idx_up and thumb_out and not mid_up and not rng_up and not pnk_up:
-        return ("Loser / L", 93.0)
+        # 7. "Stop / Wait": All fingers extended straight up, tight or loose.
+        if up_count == 4 and not thumb_folded and thumb_out:
+            # If the hand is strictly pointing vertically upwards
+            if index_tip.y < index_mcp.y and pinky_tip.y < pinky_mcp.y:
+                return ("Stop / Hello ✋", 90.0)
 
-    # 10. "Good Job / Thumbs Up": Only thumb is out/up, all other fingers folded tightly.
-    if up_count == 0 and not thumb_folded and distance(thumb_tip, index_mcp) > (palm_size * 0.7):
-        if thumb_tip.y < index_mcp.y: # pointing up
-            return ("Thumbs Up 👍", 95.0)
+        # 8. "No": Index and Middle fingers tapping the thumb (Static check: pinching).
+        if not pnk_up and not rng_up and distance(index_tip, thumb_tip) < (palm_size * 0.4) and distance(middle_tip, thumb_tip) < (palm_size * 0.4):
+            return ("No", 89.0)
+
+        # 9. "Loser": Index up, Thumb out (L shape)
+        if idx_up and thumb_out and not mid_up and not rng_up and not pnk_up:
+            return ("Loser / L", 93.0)
+
+        # 10. "Good Job / Thumbs Up": Only thumb is out/up, all other fingers folded tightly.
+        if up_count == 0 and not thumb_folded and distance(thumb_tip, index_mcp) > (palm_size * 0.7):
+            if thumb_tip.y < index_mcp.y: # pointing up
+                return ("Thumbs Up 👍", 95.0)
 
     # ── ALPHABET A-Z ──
     
