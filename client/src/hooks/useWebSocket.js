@@ -50,9 +50,16 @@ export const useWebSocket = () => {
     }
   }, []);
 
+  const setMode = useCallback((mode) => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'command', action: 'set_mode', mode }));
+    }
+  }, []);
+
   return {
     isConnected,
     prediction,
-    sendFrame
+    sendFrame,
+    setMode
   };
 };

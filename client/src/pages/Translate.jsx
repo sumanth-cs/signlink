@@ -13,7 +13,7 @@ const EMOTION_CONFIG = {
 
 const Translate = () => {
   const transcriptRef = useRef(null);
-  const { isConnected, prediction, sendFrame } = useWebSocket();
+  const { isConnected, prediction, sendFrame, setMode } = useWebSocket();
   const [history, setHistory]           = useState([]);
   const [copied, setCopied]             = useState(false);
   const [isTranslating, setTranslating] = useState(false);
@@ -22,6 +22,7 @@ const Translate = () => {
   // Advanced Features State
   const [isListening, setIsListening] = useState(false);
   const [captions, setCaptions] = useState('');
+  const [detectionMode, setDetectionMode] = useState('all');
 
   const [isRefining, setIsRefining] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('en');
@@ -59,6 +60,12 @@ const Translate = () => {
 
     recognitionRef.current = recognition;
   }, []);
+
+  useEffect(() => {
+    if (isConnected && setMode) {
+      setMode(detectionMode);
+    }
+  }, [detectionMode, isConnected, setMode]);
 
   useEffect(() => {
     if (!recognitionRef.current) return;
@@ -190,9 +197,23 @@ const Translate = () => {
         </div>
         
         <div className="flex flex-wrap items-center gap-4">
+          {/* Mode Selector */}
+          <div className="flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-sm border border-indigo-500/30">
+            <span className="text-indigo-300 font-bold tracking-wider uppercase text-[10px]">AI Mode:</span>
+            <select 
+              value={detectionMode} 
+              onChange={(e) => setDetectionMode(e.target.value)}
+              className="bg-transparent text-white font-bold text-xs focus:outline-none cursor-pointer"
+            >
+              <option className="bg-[#0a0a0c]" value="all">Mixed (A-Z + Words)</option>
+              <option className="bg-[#0a0a0c]" value="alphabet">Strict Alphabets (A-Z)</option>
+              <option className="bg-[#0a0a0c]" value="words">Strict Words & Phrases</option>
+            </select>
+          </div>
+          
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl glass-card text-sm">
             <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
-            <span className="text-slate-300 font-medium">{isConnected ? 'AI Engine Live' : 'AI Offline'}</span>
+            <span className="text-slate-300 font-medium">{isConnected ? 'Engine Live' : 'Offline'}</span>
           </div>
         </div>
       </div>

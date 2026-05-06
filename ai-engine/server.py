@@ -72,6 +72,7 @@ latest_confidence = 0.0
 latest_is_word    = True
 latest_frame_data = None
 processing        = False
+global_mode       = "all"
 
 # Sentence building config
 CONFIRM_COUNT        = 10    # same prediction N times in a row
@@ -84,7 +85,7 @@ last_append_time = time.time()
 
 def predict_worker():
     global latest_label, latest_confidence, latest_is_word
-    global latest_frame_data, processing
+    global latest_frame_data, processing, global_mode
 
     while True:
         if latest_frame_data and not processing:
@@ -117,7 +118,7 @@ def predict_worker():
                 # Fallback: Basic Heuristic Alphabet & Extra Signs Detection
                 if gesture_label is None and result.hand_landmarks and len(result.hand_landmarks) > 0:
                     import heuristic_asl
-                    h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0])
+                    h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode=global_mode)
                     if h_label:
                         gesture_label = h_label
                         gesture_conf = h_conf
@@ -152,7 +153,7 @@ def get_emotion(confidence: float) -> dict:
 
 
 async def handle_client(websocket):
-    global latest_frame_data, sentence_buffer, recent_preds, last_append_time
+    global latest_frame_data, sentence_buffer, recent_preds, last_append_time, global_mode
 
     print(f"[+] Client connected: {websocket.remote_address}")
     sentence_buffer  = ""
@@ -170,6 +171,8 @@ async def handle_client(websocket):
                             sentence_buffer = sentence_buffer[:-1]
                         elif cmd.get("action") == "clear":
                             sentence_buffer = ""
+                        elif cmd.get("action") == "set_mode":
+                            global_mode = cmd.get("mode", "all")
                     continue  # don't treat as frame
                 except Exception:
                     pass
