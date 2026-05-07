@@ -7,8 +7,8 @@ predicts A-Z from skeleton images (no heuristic post-processing needed).
 import numpy as np
 import cv2
 import os
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+
+# TensorFlow is heavy, we'll lazy-load it inside _get_model() to save startup memory.
 
 # ── Configuration ─────────────────────────────────────────────────
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'signlink_alphabet_model.h5')
@@ -23,6 +23,14 @@ def _get_model():
     """Lazy-load the model on first call."""
     global _model
     if _model is None:
+        print("[+] Loading TensorFlow and Keras...", flush=True)
+        try:
+            import tensorflow as tf
+            from tensorflow.keras.models import load_model
+        except ImportError as e:
+            print(f"[!] Critical: Could not import TensorFlow/Keras: {e}")
+            return None
+
         if not os.path.exists(MODEL_PATH):
             print(f"[!] Model not found at {MODEL_PATH}")
             return None

@@ -5,6 +5,7 @@ import { Sparkles, BookOpen, Camera, Menu, User, LayoutDashboard, Sun, Moon, Pla
 const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [isDark, setIsDark] = React.useState(true);
   
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },

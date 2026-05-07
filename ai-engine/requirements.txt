@@ -5,5 +5,6 @@ websockets==12.0
 python-dotenv
 flask
 requests
-tensorflow-cpu
+tensorflow-cpu==2.15.0
 pillow
+protobuf==3.20.3

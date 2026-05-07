@@ -1,13 +1,11 @@
-"""
-SignLink AI Engine v3 — WebSocket Server
-Uses Google's official MediaPipe Gesture Recognizer (.task model)
-for ~95% accurate detection of 8 hand gestures PLUS the ViT model
-for A-Z alphabet recognition as a fallback.
+import os
+import sys
 
-Gesture Recognizer labels:
-  None, Closed_Fist, Open_Palm, Pointing_Up,
-  Thumb_Down, Thumb_Up, Victory, ILoveYou
-"""
+# Early logging for Render diagnostics
+print("=" * 60, flush=True)
+print("  SignLink AI Engine v3  —  WebSocket Server", flush=True)
+print("  Starting initialization...", flush=True)
+print("=" * 60, flush=True)
 
 import asyncio
 import websockets
@@ -20,23 +18,24 @@ import numpy as np
 from io import BytesIO
 from PIL import Image
 from collections import deque
-import os
+
+print("Basic libraries imported...", flush=True)
+
 import heuristic_asl
+print("heuristic_asl imported...", flush=True)
+
 import alphabet_cnn
+print("alphabet_cnn (TensorFlow) imported...", flush=True)
 
-warnings.filterwarnings("ignore")
-
-import sys
-
-print("=" * 60, flush=True)
-print("  SignLink AI Engine v3  —  WebSocket Server", flush=True)
-print("  Powered by Google MediaPipe Gesture Recognizer", flush=True)
-print("=" * 60, flush=True)
-
-# ── Load Google Gesture Recognizer ──────────────────────────────────────
 import mediapipe as mp
+print("mediapipe imported...", flush=True)
+
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision as mp_vision
+
+print("MediaPipe components loaded...", flush=True)
+
+warnings.filterwarnings("ignore")
 
 TASK_FILE = os.path.join(os.path.dirname(__file__), "gesture_recognizer.task")
 assert os.path.exists(TASK_FILE), f"gesture_recognizer.task not found at {TASK_FILE}"
