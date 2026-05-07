@@ -16,32 +16,40 @@ const Traveler = () => {
   ];
 
   const phraseDictionary = [
-    // Basics
+    // Basics & Greetings
     { sign: 'Hello', category: 'basics', translations: { Spanish: 'Hola', French: 'Bonjour', Japanese: 'こんにちは', German: 'Hallo', Hindi: 'नमस्ते', Chinese: '你好' } },
+    { sign: 'Good morning', category: 'basics', translations: { Spanish: 'Buenos días', French: 'Bonjour', Japanese: 'おはようございます', German: 'Guten Morgen', Hindi: 'सुप्रभात', Chinese: '早上好' } },
+    { sign: 'Good night', category: 'basics', translations: { Spanish: 'Buenas noches', French: 'Bonne nuit', Japanese: 'おやすみなさい', German: 'Gute Nacht', Hindi: 'शुभ रात्रि', Chinese: '晚安' } },
     { sign: 'Thank You', category: 'basics', translations: { Spanish: 'Gracias', French: 'Merci', Japanese: 'ありがとう', German: 'Danke', Hindi: 'धन्यवाद', Chinese: '谢谢' } },
     { sign: 'Please', category: 'basics', translations: { Spanish: 'Por favor', French: 'S\'il vous plaît', Japanese: 'お願いします', German: 'Bitte', Hindi: 'कृपया', Chinese: '请' } },
-    { sign: 'Yes', category: 'basics', translations: { Spanish: 'Sí', French: 'Oui', Japanese: 'はい', German: 'Ja', Hindi: 'हाँ', Chinese: '是' } },
-    { sign: 'No', category: 'basics', translations: { Spanish: 'No', French: 'Non', Japanese: 'いいえ', German: 'Nein', Hindi: 'नहीं', Chinese: '不是' } },
-    { sign: 'Excuse me', category: 'basics', translations: { Spanish: 'Disculpe', French: 'Excusez-moi', Japanese: 'すみません', German: 'Entschuldigung', Hindi: 'क्षमा करें', Chinese: '打扰一下' } },
+    { sign: 'I am sorry', category: 'basics', translations: { Spanish: 'Lo siento', French: 'Désolé', Japanese: 'ごめんなさい', German: 'Es tut mir leid', Hindi: 'मुझे खेद है', Chinese: '对不起' } },
+    { sign: 'How are you?', category: 'basics', translations: { Spanish: '¿Cómo estás?', French: 'Comment allez-vous?', Japanese: 'お元気ですか？', German: 'Wie geht es dir?', Hindi: 'आप कैसे हैं?', Chinese: '你好吗？' } },
+    { sign: 'My name is...', category: 'basics', translations: { Spanish: 'Mi nombre es...', French: 'Je m\'appelle...', Japanese: '私の名前は...', German: 'Ich heiße...', Hindi: 'मेरा नाम ... है', Chinese: '我的名字是...' } },
     
     // Navigation
     { sign: 'Where is the bathroom?', category: 'directions', translations: { Spanish: '¿Dónde está el baño?', French: 'Où sont les toilettes?', Japanese: 'トイレはどこですか？', German: 'Wo ist die Toilette?', Hindi: 'बाथरूम कहाँ है?', Chinese: '洗手间在哪里？' } },
     { sign: 'Where is the train station?', category: 'directions', translations: { Spanish: '¿Dónde está la estación de tren?', French: 'Où est la gare?', Japanese: '駅はどこですか？', German: 'Wo ist der Bahnhof?', Hindi: 'रेलवे स्टेशन कहाँ है?', Chinese: '火车站怎么走？' } },
-    { sign: 'Where is my hotel?', category: 'directions', translations: { Spanish: '¿Dónde está mi hotel?', French: 'Où est mon hôtel?', Japanese: '私のホテルはどこですか？', German: 'Wo ist mein Hotel?', Hindi: 'मेरा होटल कहाँ है?', Chinese: '我的酒店在哪里？' } },
-    { sign: 'How do I get to the airport?', category: 'directions', translations: { Spanish: '¿Cómo llego al aeropuerto?', French: 'Comment aller à l\'aéroport?', Japanese: '空港にはどうやって行きますか？', German: 'Wie komme ich zum Flughafen?', Hindi: 'हवाई अड्डे कैसे पहुँचें?', Chinese: '我怎么去机场？' } },
+    { sign: 'Where is the bus stop?', category: 'directions', translations: { Spanish: '¿Dónde está la parada de autobús?', French: 'Où est l\'arrêt de bus?', Japanese: 'バス停はどこですか？', German: 'Wo ist die Bushaltestelle?', Hindi: 'बस स्टॉप कहाँ है?', Chinese: '公交车站在哪里？' } },
+    { sign: 'Turn left', category: 'directions', translations: { Spanish: 'Gire a la izquierda', French: 'Tournez à gauche', Japanese: '左に曲がってください', German: 'Biegen Sie links ab', Hindi: 'बाएं मुड़ें', Chinese: '左转' } },
+    { sign: 'Turn right', category: 'directions', translations: { Spanish: 'Gire a la derecha', French: 'Tournez à droite', Japanese: '右に曲がってください', German: 'Biegen Sie rechts ab', Hindi: 'दाएं मुड़ें', Chinese: '右转' } },
+    { sign: 'Go straight', category: 'directions', translations: { Spanish: 'Siga recto', French: 'Allez tout droit', Japanese: '直進してください', German: 'Gehen Sie geradeaus', Hindi: 'सीधे जाओ', Chinese: '直走' } },
+    { sign: 'Is it far?', category: 'directions', translations: { Spanish: '¿Está lejos?', French: 'C\'est loin?', Japanese: '遠いですか？', German: 'Ist es weit?', Hindi: 'क्या यह दूर है?', Chinese: '远吗？' } },
     
-    // Food
-    { sign: 'Water', category: 'food', translations: { Spanish: 'Agua', French: 'Eau', Japanese: '水', German: 'Wasser', Hindi: 'पानी', Chinese: '水' } },
+    // Food & Dining
+    { sign: 'I would like water', category: 'food', translations: { Spanish: 'Quisiera agua', French: 'Je voudrais de l\'eau', Japanese: '水をお願いします', German: 'Ich möchte Wasser', Hindi: 'मुझे पानी चाहिए', Chinese: '我想喝水' } },
     { sign: 'I am hungry', category: 'food', translations: { Spanish: 'Tengo hambre', French: 'J\'ai faim', Japanese: 'お腹が空きました', German: 'Ich habe Hunger', Hindi: 'मुझे भूख लगी है', Chinese: '我饿了' } },
-    { sign: 'Food', category: 'food', translations: { Spanish: 'Comida', French: 'Nourriture', Japanese: '食べ物', German: 'Essen', Hindi: 'खाना', Chinese: '食物' } },
+    { sign: 'I am vegetarian', category: 'food', translations: { Spanish: 'Soy vegetariano', French: 'Je suis végétarien', Japanese: '私は菜食主義者です', German: 'Ich bin Vegetarier', Hindi: 'मैं शाकाहारी हूँ', Chinese: '我是素食主义者' } },
+    { sign: 'The food is delicious', category: 'food', translations: { Spanish: 'La comida está deliciosa', French: 'La nourriture est délicieuse', Japanese: '料理は美味しいです', German: 'Das Essen ist lecker', Hindi: 'खाना स्वादिष्ट है', Chinese: '食物很美味' } },
     { sign: 'How much is this?', category: 'food', translations: { Spanish: '¿Cuánto cuesta?', French: 'Combien ça coûte?', Japanese: 'これはいくらですか？', German: 'Wie viel kostet das?', Hindi: 'यह कितने का है?', Chinese: '这个多少钱？' } },
-    { sign: 'Check please', category: 'food', translations: { Spanish: 'La cuenta por favor', French: 'L\'addition, s\'il vous plaît', Japanese: 'お会計をお願いします', German: 'Die Rechnung bitte', Hindi: 'बिल ले आइए', Chinese: '买单' } },
+    { sign: 'I have an allergy', category: 'food', translations: { Spanish: 'Tengo una alergia', French: 'J\'ai une allergie', Japanese: 'アレルギーがあります', German: 'Ich habe eine Allergie', Hindi: 'मुझे एलर्जी है', Chinese: '我过敏' } },
     
-    // Emergency
+    // Emergency & Health
     { sign: 'I need help', category: 'emergency', translations: { Spanish: 'Necesito ayuda', French: 'J\'ai besoin d\'aide', Japanese: '助けてください', German: 'Ich brauche Hilfe', Hindi: 'मुझे मदद चाहिए', Chinese: '我需要帮助' } },
-    { sign: 'Call the police', category: 'emergency', translations: { Spanish: 'Llama a la policía', French: 'Appelez la police', Japanese: '警察を呼んでください', German: 'Rufen Sie die Polizei', Hindi: 'पुलिस को बुलाओ', Chinese: '报警' } },
-    { sign: 'I need a doctor', category: 'emergency', translations: { Spanish: 'Necesito un médico', French: 'J\'ai besoin d\'un médecin', Japanese: '医者が必要です', German: 'Ich brauche einen Arzt', Hindi: 'मुझे डॉक्टर की जरूरत है', Chinese: '我需要医生' } },
-    { sign: 'Hospital', category: 'emergency', translations: { Spanish: 'Hospital', French: 'Hôpital', Japanese: '病院', German: 'Krankenhaus', Hindi: 'अस्पताल', Chinese: '医院' } },
+    { sign: 'I am lost', category: 'emergency', translations: { Spanish: 'Estoy perdido', French: 'Je suis perdu', Japanese: '迷子になりました', German: 'Ich habe mich verlaufen', Hindi: 'मैं खो गया हूँ', Chinese: '我迷路了' } },
+    { sign: 'Call an ambulance', category: 'emergency', translations: { Spanish: 'Llame a una ambulancia', French: 'Appelez une ambulance', Japanese: '救急車を呼んでください', German: 'Rufen Sie einen Krankenwagen', Hindi: 'एम्बुलेंस बुलाओ', Chinese: '叫救护车' } },
+    { sign: 'Where is the hospital?', category: 'emergency', translations: { Spanish: '¿Dónde está el hospital?', French: 'Où est l\'hôpital?', Japanese: '病院はどこですか？', German: 'Wo ist das Krankenhaus?', Hindi: 'अस्पताल कहाँ है?', Chinese: '医院在哪里？' } },
+    { sign: 'I feel sick', category: 'emergency', translations: { Spanish: 'Me siento mal', French: 'Je me sens mal', Japanese: '気分が悪いです', German: 'Ich fühle mich krank', Hindi: 'मेरी तबीयत ठीक नहीं है', Chinese: '我感觉不舒服' } },
+    { sign: 'It hurts here', category: 'emergency', translations: { Spanish: 'Me duele aquí', French: 'Ça fait mal ici', Japanese: 'ここが痛いです', German: 'Es tut hier weh', Hindi: 'यहाँ दर्द हो रहा है', Chinese: '这里疼' } },
   ];
 
   const handleSpeak = (text, lang) => {

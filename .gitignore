@@ -3,4 +3,6 @@ venv/
 .env
 __pycache__/
 ai-engine/model/
+ai-engine/legacy_signlanguage/
+ai-engine/data/
 .DS_Store

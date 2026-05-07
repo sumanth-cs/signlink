@@ -24,9 +24,6 @@ import os
 import heuristic_asl
 import alphabet_cnn
 
-# Pre-load CNN model
-alphabet_cnn.load_cnn_model()
-
 warnings.filterwarnings("ignore")
 
 import sys
@@ -81,9 +78,30 @@ processing        = False
 global_mode       = "all"
 
 # Sentence building config
-CONFIRM_COUNT        = 8     # frames needed for stability
-COOLDOWN             = 2.0   # seconds between appends
-CONFIDENCE_THRESHOLD = 45.0  # minimum % to accept (lowered for alphabets)
+# Sentence building config
+CONFIRM_COUNT        = 5     # Lowered for faster alphabet spelling
+COOLDOWN_LETTER      = 0.5   # Faster for alphabets
+COOLDOWN_WORD        = 1.5   # Standard for words
+CONFIDENCE_THRESHOLD = 40.0  # Lowered for alphabets
+
+# Simple common phrases for suggestions
+SUGGESTIONS_MAP = {
+    "h": ["hello", "how are you", "help"],
+    "ho": ["how are you", "how much", "hospital"],
+    "how": ["how are you", "how much"],
+    "w": ["water", "where is", "want"],
+    "wh": ["where is", "what time"],
+    "t": ["thank you", "thanks", "time"],
+    "th": ["thank you", "thanks"],
+    "i": ["i am", "i want", "i love you"],
+    "p": ["please", "police", "pain"],
+}
+
+def get_suggestions(text):
+    text = text.lower().strip()
+    if not text: return []
+    last_word = text.split()[-1] if text else ""
+    return SUGGESTIONS_MAP.get(last_word, [])[:3]
 
 sentence_buffer = ""
 recent_preds    = deque(maxlen=15)
@@ -114,17 +132,10 @@ def predict_worker():
                 gesture_conf  = 0.0
 
                 if global_mode == "alphabet":
-                    # 1. Use the HIGH ACCURACY Legacy CNN Model for Alphabets
+                    # Direct 26-class CNN — no heuristics needed
                     if result.hand_landmarks and len(result.hand_landmarks) > 0:
                         h, w, _ = img_rgb.shape
-                        gesture_label, gesture_conf = alphabet_cnn.detect_alphabet_cnn(result.hand_landmarks[0], (w, h))
-                        
-                        # 2. Heuristic Fallback for Alphabets (if CNN is unconfident)
-                        if (gesture_label is None or gesture_conf < 40.0):
-                            h_label, h_conf = heuristic_asl.detect_alphabet_and_signs(result.hand_landmarks[0], mode="alphabet")
-                            if h_label and len(h_label) == 1: # Only take alphabets from heuristic here
-                                gesture_label = h_label
-                                gesture_conf = h_conf
+                        gesture_label, gesture_conf = alphabet_cnn.detect_alphabet(result.hand_landmarks[0], (w, h))
                 elif global_mode == "words":
                     # 1. Check official gesture recognizer for words
                     if result.gestures and len(result.gestures) > 0:
@@ -218,6 +229,15 @@ async def handle_client(websocket):
                                 latest_label = "—"
                                 latest_confidence = 0.0
                                 last_sent_pred_id = latest_pred_id # Ignore past predictions
+                        elif cmd.get("action") == "add_word":
+                            word = cmd.get("word", "").upper()
+                            # Replace the last unfinished word or just add
+                            parts = sentence_buffer.split()
+                            if parts:
+                                sentence_buffer = " ".join(parts[:-1]) + " " + word + " "
+                            else:
+                                sentence_buffer += word + " "
+                            sentence_buffer = sentence_buffer.lstrip()
                     continue  # don't treat as frame
                 except Exception:
                     pass
@@ -242,17 +262,18 @@ async def handle_client(websocket):
                 now = time.time()
                 word_added = False
                 
-                # Dynamic threshold: Alphabets need less confidence than words
+                # Dynamic threshold & cooldown
                 req_conf = CONFIDENCE_THRESHOLD if not is_word else 70.0
                 req_count = CONFIRM_COUNT if not is_word else 10 # Words need more stability
+                cd = COOLDOWN_LETTER if not is_word else COOLDOWN_WORD
 
                 if (recent_preds.count(label) >= req_count
-                        and (now - last_append_time) > COOLDOWN
+                        and (now - last_append_time) > cd
                         and label not in ["—", "none", "nothing"]
                         and conf >= req_conf):
 
                     if is_word:
-                        sentence_buffer += label + "  "
+                        sentence_buffer += label + " "
                     else:
                         sentence_buffer += label.upper()
                     
@@ -265,9 +286,10 @@ async def handle_client(websocket):
                 "text":       latest_label,
                 "confidence": latest_confidence,
                 "sentence":   sentence_buffer,
-                "sentiment":  get_emotion(conf),
+                "suggestions": get_suggestions(sentence_buffer),
+                "sentiment":  get_emotion(latest_confidence),
                 "word_added": word_added,
-                "is_word":    is_word,
+                "is_word":    latest_is_word,
             }
             await websocket.send(json.dumps(payload))
 

@@ -13,7 +13,7 @@ const EMOTION_CONFIG = {
 
 const Translate = () => {
   const transcriptRef = useRef(null);
-  const { isConnected, prediction, sendFrame, setMode } = useWebSocket();
+  const { isConnected, prediction, sendFrame, setMode, sendCommand } = useWebSocket();
   const [history, setHistory]           = useState([]);
   const [copied, setCopied]             = useState(false);
   const [isTranslating, setTranslating] = useState(false);
@@ -94,29 +94,30 @@ const Translate = () => {
   };
 
   useEffect(() => {
-    if (!prediction?.word_added || !isTranslating) return;
-    const label = prediction.text;
-    if (!label || label === '—') return;
+    if (!prediction || !isTranslating) return;
+    
+    // Always sync the full sentence from backend to avoid drift
+    if (prediction.sentence !== undefined) {
+      setSentence(prediction.sentence);
+    }
 
-    setSentence(prev => {
-      if (prediction.is_word) return prev + label + ' ';
-      return prev + label.toUpperCase();
-    });
-
-    setHistory(prev => {
-      const entry = {
-        id:         Date.now(),
-        label,
-        isWord:     prediction.is_word,
-        confidence: prediction.confidence,
-        time:       new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
-      };
-      return [...prev, entry].slice(-30);
-    });
+    if (prediction.word_added) {
+      const label = prediction.text;
+      setHistory(prev => {
+        const entry = {
+          id:         Date.now(),
+          label,
+          isWord:     prediction.is_word,
+          confidence: prediction.confidence,
+          time:       new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+        };
+        return [...prev, entry].slice(-30);
+      });
+    }
   }, [prediction, isTranslating]);
 
-  const handleBackspace = () => setSentence(prev => prev.trimEnd().slice(0, -1));
-  const handleClearSentence = () => setSentence('');
+  const handleBackspace = () => sendCommand('backspace');
+  const handleClearSentence = () => sendCommand('clear');
 
   const handleRefineSentence = async () => {
     if (!sentence) return;
@@ -303,9 +304,7 @@ const Translate = () => {
           </div>
 
           {/* Removed Tips section to keep UI minimalistic */}
-        </div>
-
-        {/* RIGHT: Sentence & Control (4 cols) */}
+         {/* RIGHT: Sentence & Control (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
           
           {/* Live Sentence Card */}
@@ -317,10 +316,10 @@ const Translate = () => {
                   <h3 className="text-sm font-bold uppercase tracking-wider">Output Sentence</h3>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={handleCopy} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all">
+                  <button onClick={handleCopy} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all" title="Copy">
                     <Copy className="w-4 h-4" />
                   </button>
-                  <button onClick={handleSpeak} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all">
+                  <button onClick={handleSpeak} className="p-2 hover:bg-white/5 rounded-lg text-slate-400 hover:text-white transition-all" title="Speak">
                     <Volume2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -344,28 +343,57 @@ const Translate = () => {
               </div>
             </div>
             
-            <div className="bg-black/40 border border-white/10 rounded-xl p-4 min-h-[120px] mb-4">
+            {/* AI Suggestions Bar */}
+            {prediction?.suggestions?.length > 0 && (
+              <div className="mb-4">
+                <p className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold mb-2 ml-1">AI Recommendations</p>
+                <div className="flex flex-wrap gap-2">
+                  {prediction.suggestions.map((word, i) => (
+                    <button
+                      key={i}
+                      onClick={() => sendCommand('add_word', { word })}
+                      className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold transition-all flex items-center gap-2 group"
+                    >
+                      <Sparkles className="w-3 h-3 opacity-50 group-hover:opacity-100" />
+                      {word}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            <div className="bg-black/40 border border-white/10 rounded-xl p-4 min-h-[120px] mb-4 relative group">
               <p className="text-lg text-white font-medium leading-relaxed tracking-wide">
                 {sentence || <span className="text-slate-600 italic">Waiting for your signs...</span>}
                 {sentence && <span className="inline-block w-1.5 h-5 ml-1 bg-indigo-500 animate-pulse align-middle" />}
               </p>
+              
+              {sentence && (
+                <button 
+                  onClick={handleBackspace}
+                  className="absolute top-2 right-2 p-2 bg-white/5 hover:bg-white/10 rounded-lg text-slate-500 hover:text-white transition-all opacity-0 group-hover:opacity-100"
+                  title="Backspace"
+                >
+                  <Delete className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleRefineSentence}
                 disabled={isRefining || !sentence}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:hover:bg-indigo-500 text-white text-xs font-bold transition-all"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 disabled:hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-500/20"
               >
                 <Sparkles className={`w-3.5 h-3.5 ${isRefining ? 'animate-spin' : ''}`} />
-                {isRefining ? 'AI Refining...' : 'Refine Sentence'}
+                {isRefining ? 'AI Refining...' : 'Refine & Fix'}
               </button>
               <button
                 onClick={handleClearSentence}
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white/5 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-white/10 text-xs font-bold transition-all"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Clear All
+                Clear
               </button>
             </div>
           </div>

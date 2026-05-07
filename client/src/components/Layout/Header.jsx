@@ -4,13 +4,13 @@ import { Sparkles, BookOpen, Camera, Menu, User, LayoutDashboard, Sun, Moon, Pla
 
 const Header = () => {
   const location = useLocation();
-  const [isDark, setIsDark] = React.useState(true);
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Translation Hub', path: '/translate', icon: Camera },
-    { name: 'Traveler Mode', path: '/traveler', icon: Plane },
-    { name: 'Learning Center', path: '/learn', icon: BookOpen }
+    { name: 'Translation', path: '/translate', icon: Camera },
+    { name: 'Traveler', path: '/traveler', icon: Plane },
+    { name: 'Learning', path: '/learn', icon: BookOpen }
   ];
 
   const toggleTheme = () => {
@@ -19,7 +19,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/5 bg-black/40 backdrop-blur-2xl">
+    <header className="sticky top-0 z-[100] border-b border-white/5 bg-black/40 backdrop-blur-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           
@@ -66,20 +66,48 @@ const Header = () => {
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}
             </button>
-            <div className="hidden sm:flex flex-col items-end mr-2">
-              <span className="text-xs font-bold text-white">{localStorage.getItem('userName') || 'Guest'}</span>
-              <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Explorer Level 1</span>
-            </div>
-            <Link to="/profile" className="relative w-10 h-10 rounded-xl glass-card border-white/10 flex items-center justify-center hover:border-indigo-500/50 transition-all">
+            
+            <Link to="/profile" className="hidden sm:flex relative w-10 h-10 rounded-xl glass-card border-white/10 items-center justify-center hover:border-indigo-500/50 transition-all">
               <User size={20} className="text-slate-400" />
               <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-black rounded-full"></div>
             </Link>
-            <button className="md:hidden text-slate-400 hover:text-white">
-              <Menu size={24} />
+
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="md:hidden w-10 h-10 rounded-xl glass-card flex items-center justify-center text-slate-400 hover:text-white border border-white/10"
+            >
+              <Menu size={20} />
             </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden absolute top-full left-0 right-0 bg-black/95 backdrop-blur-3xl border-b border-white/10 p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+          <div className="grid grid-cols-1 gap-3">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`flex items-center gap-4 p-4 rounded-2xl text-base font-bold transition-all ${
+                    isActive 
+                      ? 'bg-indigo-500 text-white' 
+                      : 'bg-white/5 text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  <Icon size={20} />
+                  {item.name}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </header>
   );
 };
