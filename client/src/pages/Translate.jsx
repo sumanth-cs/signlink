@@ -303,8 +303,9 @@ const Translate = () => {
             </div>
           </div>
 
-          {/* Removed Tips section to keep UI minimalistic */}
-         {/* RIGHT: Sentence & Control (4 cols) */}
+          </div>
+
+          {/* RIGHT: Sentence & Control (4 cols) */}
         <div className="lg:col-span-4 space-y-6">
           
           {/* Live Sentence Card */}
